@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+html,
+body {
+  @apply m-0 box-border h-full w-full overflow-x-hidden p-0;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
