@@ -38,7 +38,7 @@ const Home: React.FC = () => {
       {/* Navigation Bar */}
       <NavBar setSidebarOpen={setSidebarOpen} />
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col pt-16 md:flex-row">
+      <div className="flex min-h-screen flex-1 flex-col pt-16 md:flex-row">
         {/* Sidebar */}
         <SideBar
           sidebarOpen={sidebarOpen}
@@ -49,8 +49,8 @@ const Home: React.FC = () => {
           users={users}
         />
         {/* Main Canvas Area */}
-        <main className="relative flex-1 bg-gray-100 transition-colors duration-200 dark:bg-gray-900">
-          <div className="absolute top-4 left-1/2 z-10 w-full max-w-xs -translate-x-1/2 px-4 sm:max-w-md md:max-w-lg">
+        <main className="relative flex h-[calc(100vh-4rem)] flex-1 flex-col pt-24 transition-colors duration-200 dark:bg-gray-900">
+          <div className="absolute top-4 left-1/2 z-10 h-[40%] max-w-xs -translate-x-1/2 px-4 sm:max-w-md md:max-w-lg">
             <Tabs.Root
               defaultValue="shape"
               className="rounded-xl border border-gray-200 bg-white/80 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/80"
@@ -148,7 +148,7 @@ const Home: React.FC = () => {
               </Tabs.Content>
             </Tabs.Root>
           </div>
-          <div className="flex h-full w-full flex-col md:flex-row">
+          <div className="flex h-full flex-col md:flex-row">
             <div className="flex-1" />
             {currentRoom && (
               <div className="w-full border-t border-gray-200 bg-white/70 p-4 md:w-80 md:border-t-0 md:border-l dark:border-gray-800 dark:bg-gray-900/70">
@@ -176,6 +176,7 @@ const Home: React.FC = () => {
                 </div>
               </div>
             )}
+            <canvas className="h-full w-full self-center bg-gray-200"></canvas>
           </div>
         </main>
       </div>
