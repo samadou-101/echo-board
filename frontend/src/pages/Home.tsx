@@ -176,7 +176,7 @@ const Home: React.FC = () => {
                 </div>
               </div>
             )}
-            <canvas className="h-full w-full self-center bg-gray-200"></canvas>
+            <canvas className="h-full w-full self-center bg-gray-100"></canvas>
           </div>
         </main>
       </div>
