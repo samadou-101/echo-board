@@ -6,77 +6,191 @@ export default function CanvasArea() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [lineWidth, setLineWidth] = useState<number>(2);
   const [color, setColor] = useState<string>("#000000");
-  const [mode, setMode] = useState<"draw" | "erase">("draw");
+  const [mode, setMode] = useState<
+    "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus"
+  >("draw");
   const [isDrawEnabled, setIsDrawEnabled] = useState(false);
+  const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const previewCanvas = previewCanvasRef.current;
+    if (!canvas || !previewCanvas) return;
 
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
+    previewCanvas.width = canvas.offsetWidth;
+    previewCanvas.height = canvas.offsetHeight;
+
     const context = canvas.getContext("2d");
-    if (context) {
+    const previewContext = previewCanvas.getContext("2d");
+    if (context && previewContext) {
       context.lineCap = "round";
+      previewContext.lineCap = "round";
       contextRef.current = context;
     }
   }, []);
 
   const startDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawEnabled) return;
     const { offsetX, offsetY } = e.nativeEvent;
-    if (contextRef.current) {
-      contextRef.current.beginPath();
-      contextRef.current.moveTo(offsetX, offsetY);
+    if (
+      mode === "circle" ||
+      mode === "rectangle" ||
+      mode === "triangle" ||
+      mode === "rhombus"
+    ) {
+      setStartPos({ x: offsetX, y: offsetY });
       setIsDrawing(true);
+    } else if (isDrawEnabled) {
+      if (contextRef.current) {
+        contextRef.current.beginPath();
+        contextRef.current.moveTo(offsetX, offsetY);
+        setIsDrawing(true);
+      }
     }
   };
 
   const draw = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !contextRef.current || !isDrawEnabled) return;
+    if (!isDrawing || !contextRef.current || !previewCanvasRef.current) return;
     const { offsetX, offsetY } = e.nativeEvent;
-    contextRef.current.lineTo(offsetX, offsetY);
-    contextRef.current.strokeStyle = mode === "erase" ? "#d1d5db" : color;
-    contextRef.current.lineWidth = mode === "erase" ? 20 : lineWidth;
-    contextRef.current.stroke();
+    const previewContext = previewCanvasRef.current.getContext("2d");
+    if (!previewContext) return;
+
+    previewContext.clearRect(
+      0,
+      0,
+      previewCanvasRef.current.width,
+      previewCanvasRef.current.height,
+    );
+    previewContext.beginPath();
+    previewContext.strokeStyle = color;
+    previewContext.lineWidth = lineWidth;
+
+    if (mode === "circle" && startPos) {
+      const radius = Math.sqrt(
+        (offsetX - startPos.x) ** 2 + (offsetY - startPos.y) ** 2,
+      );
+      previewContext.arc(startPos.x, startPos.y, radius, 0, 2 * Math.PI);
+    } else if (mode === "rectangle" && startPos) {
+      previewContext.rect(
+        startPos.x,
+        startPos.y,
+        offsetX - startPos.x,
+        offsetY - startPos.y,
+      );
+    } else if (mode === "triangle" && startPos) {
+      previewContext.moveTo(startPos.x, startPos.y);
+      previewContext.lineTo(offsetX, offsetY);
+      previewContext.lineTo(startPos.x - (offsetX - startPos.x), offsetY);
+      previewContext.closePath();
+    } else if (mode === "rhombus" && startPos) {
+      const midX = (startPos.x + offsetX) / 2;
+      const midY = (startPos.y + offsetY) / 2;
+      previewContext.moveTo(midX, startPos.y);
+      previewContext.lineTo(offsetX, midY);
+      previewContext.lineTo(midX, offsetY);
+      previewContext.lineTo(startPos.x, midY);
+      previewContext.closePath();
+    } else if (isDrawEnabled) {
+      contextRef.current.lineTo(offsetX, offsetY);
+      contextRef.current.strokeStyle = mode === "erase" ? "#d1d5db" : color;
+      contextRef.current.lineWidth = mode === "erase" ? 20 : lineWidth;
+      contextRef.current.stroke();
+      return;
+    }
+    previewContext.stroke();
   };
 
-  const stopDrawing = () => {
-    if (contextRef.current) {
+  const stopDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
+    if (!contextRef.current || !previewCanvasRef.current || !isDrawing) return;
+    const previewContext = previewCanvasRef.current.getContext("2d");
+    if (!previewContext) return;
+
+    const { offsetX, offsetY } = e.nativeEvent;
+    contextRef.current.beginPath();
+    contextRef.current.strokeStyle = color;
+    contextRef.current.lineWidth = lineWidth;
+
+    if (mode === "circle" && startPos) {
+      const radius = Math.sqrt(
+        (offsetX - startPos.x) ** 2 + (offsetY - startPos.y) ** 2,
+      );
+      contextRef.current.arc(startPos.x, startPos.y, radius, 0, 2 * Math.PI);
+    } else if (mode === "rectangle" && startPos) {
+      contextRef.current.rect(
+        startPos.x,
+        startPos.y,
+        offsetX - startPos.x,
+        offsetY - startPos.y,
+      );
+    } else if (mode === "triangle" && startPos) {
+      contextRef.current.moveTo(startPos.x, startPos.y);
+      contextRef.current.lineTo(offsetX, offsetY);
+      contextRef.current.lineTo(startPos.x - (offsetX - startPos.x), offsetY);
+      contextRef.current.closePath();
+    } else if (mode === "rhombus" && startPos) {
+      const midX = (startPos.x + offsetX) / 2;
+      const midY = (startPos.y + offsetY) / 2;
+      contextRef.current.moveTo(midX, startPos.y);
+      contextRef.current.lineTo(offsetX, midY);
+      contextRef.current.lineTo(midX, offsetY);
+      contextRef.current.lineTo(startPos.x, midY);
       contextRef.current.closePath();
     }
+    contextRef.current.stroke();
+    previewContext.clearRect(
+      0,
+      0,
+      previewCanvasRef.current.width,
+      previewCanvasRef.current.height,
+    );
+    setStartPos(null);
+    contextRef.current.closePath();
     setIsDrawing(false);
   };
 
   const clearCanvas = () => {
-    if (canvasRef.current && contextRef.current) {
+    if (canvasRef.current && contextRef.current && previewCanvasRef.current) {
       contextRef.current.clearRect(
         0,
         0,
         canvasRef.current.width,
         canvasRef.current.height,
       );
+      const previewContext = previewCanvasRef.current.getContext("2d");
+      if (previewContext)
+        previewContext.clearRect(
+          0,
+          0,
+          previewCanvasRef.current.width,
+          previewCanvasRef.current.height,
+        );
     }
   };
 
-  const handleModeChange = (newMode: "draw" | "erase") => {
+  const handleModeChange = (
+    newMode: "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus",
+  ) => {
     setMode(newMode);
-    setIsDrawEnabled(true); // Enable drawing for both draw and erase modes
+    setIsDrawEnabled(newMode === "draw" || newMode === "erase");
     if (canvasRef.current) {
       canvasRef.current.style.cursor =
-        newMode === "draw" ? "crosshair" : "cell";
+        newMode === "erase" ? "cell" : "crosshair";
     }
   };
 
   const handleTabChange = (value: string) => {
     if (value === "draw") {
-      handleModeChange("draw"); // Activate pen when "Draw" tab is clicked
+      handleModeChange("draw");
     } else if (canvasRef.current) {
       canvasRef.current.style.cursor = "default";
       setIsDrawEnabled(false);
-      setMode("draw"); // Reset mode to draw when leaving draw tab
+      setMode("draw");
     }
   };
 
@@ -127,28 +241,32 @@ export default function CanvasArea() {
             <Button
               variant="outline"
               size="icon"
-              className="flex h-8 w-8 items-center justify-center shadow-sm sm:h-9 sm:w-9"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "rectangle" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              onClick={() => handleModeChange("rectangle")}
             >
               ◻️
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="flex h-8 w-8 items-center justify-center shadow-sm sm:h-9 sm:w-9"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "circle" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              onClick={() => handleModeChange("circle")}
             >
               ○
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="flex h-8 w-8 items-center justify-center shadow-sm sm:h-9 sm:w-9"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "rhombus" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              onClick={() => handleModeChange("rhombus")}
             >
               ◇
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="flex h-8 w-8 items-center justify-center shadow-sm sm:h-9 sm:w-9"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "triangle" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              onClick={() => handleModeChange("triangle")}
             >
               △
             </Button>
@@ -200,11 +318,7 @@ export default function CanvasArea() {
             <Button
               variant="outline"
               size="icon"
-              className={`flex h-8 w-8 items-center justify-center shadow-sm ${
-                mode === "draw"
-                  ? "border-blue-500 bg-blue-100 dark:bg-blue-900"
-                  : ""
-              }`}
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "draw" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
               onClick={() => handleModeChange("draw")}
             >
               ✏️
@@ -212,11 +326,7 @@ export default function CanvasArea() {
             <Button
               variant="outline"
               size="icon"
-              className={`flex h-8 w-8 items-center justify-center shadow-sm ${
-                mode === "erase"
-                  ? "border-blue-500 bg-blue-100 dark:bg-blue-900"
-                  : ""
-              }`}
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "erase" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
               onClick={() => handleModeChange("erase")}
             >
               🧹
@@ -232,7 +342,7 @@ export default function CanvasArea() {
           </Tabs.Content>
         </Tabs.Root>
       </div>
-      <div className="flex h-full flex-col md:flex-row">
+      <div className="relative flex h-full flex-col md:flex-row">
         <div className="flex-1" />
         <canvas
           ref={canvasRef}
@@ -241,6 +351,10 @@ export default function CanvasArea() {
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseOut={stopDrawing}
+        />
+        <canvas
+          ref={previewCanvasRef}
+          className="pointer-events-none absolute h-full w-full self-center"
         />
       </div>
     </main>
