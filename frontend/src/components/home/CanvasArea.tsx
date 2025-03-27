@@ -104,6 +104,28 @@ export default function CanvasArea() {
               ⟳
             </Button>
           </Tabs.Content>
+          <Tabs.Content
+            value="draw"
+            className="mt-2 flex flex-wrap justify-center gap-2 rounded-lg border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95"
+          >
+            <select className="h-8 rounded border px-2 dark:bg-gray-800">
+              <option value="2">Thin (2px)</option>
+              <option value="5">Medium (5px)</option>
+              <option value="10">Thick (10px)</option>
+            </select>
+            <input
+              type="color"
+              className="h-8 w-8 rounded"
+              defaultValue="#000000"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="flex h-8 w-8 items-center justify-center shadow-sm"
+            >
+              ✏️
+            </Button>
+          </Tabs.Content>
         </Tabs.Root>
       </div>
       <div className="flex h-full flex-col md:flex-row">
