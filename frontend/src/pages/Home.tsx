@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { NavBar } from "@components/home/NavBar";
 import { SideBar } from "@components/home/SideBar";
 import CanvasArea from "@components/home/CanvasArea";
-import socket from "@services/socket-services";
+import { useSocketConnection } from "@hooks/useSocketConnection";
+import { createRoom } from "@services/socket/room";
 
 // Main App component
 const Home: React.FC = () => {
@@ -11,23 +12,18 @@ const Home: React.FC = () => {
   const [roomName, setRoomName] = useState("");
   const [users, setUsers] = useState<string[]>([]);
 
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Connected to server with ID " + socket.id);
+  useSocketConnection();
+
+  const handleCreateRoom = () => {
+    createRoom(roomName, (response) => {
+      if (response.success) {
+        setCurrentRoom(response.roomId ?? null);
+        setUsers(["You"]);
+        setRoomName("");
+      } else {
+        console.error("Failed to create room:", response.error);
+      }
     });
-
-    return () => {
-      socket.off("connect");
-    };
-  }, []);
-
-  const createRoom = () => {
-    if (roomName.trim()) {
-      const roomId = `room_${Date.now()}`;
-      setCurrentRoom(roomId);
-      setUsers(["You"]);
-      setRoomName("");
-    }
   };
 
   return (
@@ -42,7 +38,7 @@ const Home: React.FC = () => {
           currentRoom={currentRoom}
           roomName={roomName}
           setRoomName={setRoomName}
-          createRoom={createRoom}
+          createRoom={handleCreateRoom}
           users={users}
         />
         {/* Main Canvas Area */}
