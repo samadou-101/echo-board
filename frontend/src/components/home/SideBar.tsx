@@ -36,28 +36,27 @@ export const SideBar: React.FC<SideBarProps> = ({
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
-      <Tabs.Root
-        className="mb-2"
-        defaultValue="create"
-        onValueChange={handleTabChange}
-      >
-        <Tabs.List className="flex flex-wrap justify-center border-b border-gray-200 dark:border-gray-800">
-          <Tabs.Trigger
-            value="create"
-            className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
-          >
-            create
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="join"
-            className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
-          >
-            join
-          </Tabs.Trigger>
-        </Tabs.List>
-      </Tabs.Root>
-
       <div className="flex h-full flex-col">
+        <Tabs.Root
+          className="mb-2"
+          defaultValue="create"
+          onValueChange={handleTabChange}
+        >
+          <Tabs.List className="flex flex-wrap justify-center border-b border-gray-200 dark:border-gray-800">
+            <Tabs.Trigger
+              value="create"
+              className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
+            >
+              create
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              value="join"
+              className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
+            >
+              join
+            </Tabs.Trigger>
+          </Tabs.List>
+        </Tabs.Root>
         {currentRoom ? (
           <div className="mb-6">
             <h2 className="text-lg font-semibold">Room: {currentRoom}</h2>
