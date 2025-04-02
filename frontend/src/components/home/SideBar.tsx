@@ -11,6 +11,7 @@ interface SideBarProps {
   roomName: string;
   setRoomName: (name: string) => void;
   createRoom: () => void;
+  joinRoom: () => void;
   users: string[];
 }
 
@@ -20,18 +21,13 @@ export const SideBar: React.FC<SideBarProps> = ({
   roomName,
   setRoomName,
   createRoom,
+  joinRoom,
   users,
 }) => {
   const [isJoiningRoom, setIsJoiningRoom] = useState<boolean>(false);
+
   const handleTabChange = (value: string) => {
-    switch (value) {
-      case "create":
-        setIsJoiningRoom(false);
-        break;
-      case "join":
-        setIsJoiningRoom(true);
-        break;
-    }
+    setIsJoiningRoom(value === "join");
   };
 
   return (
@@ -62,79 +58,43 @@ export const SideBar: React.FC<SideBarProps> = ({
       </Tabs.Root>
 
       <div className="flex h-full flex-col">
-        {!isJoiningRoom &&
-          (!currentRoom ? (
-            <div className="mb-6">
-              <Input
-                placeholder="Room name"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                className="mb-2 w-full"
-              />
-              <Button onClick={createRoom} className="flex w-full items-center">
-                <Plus className="mr-2 h-4 w-4" /> Create Room
-              </Button>
+        {currentRoom ? (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold">Room: {currentRoom}</h2>
+            <div className="mt-2">
+              <h3 className="text-sm font-medium">Users:</h3>
+              {users.map((user) => (
+                <div key={user} className="text-sm">
+                  {user}
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold">Room: {currentRoom}</h2>
-              <div className="mt-2">
-                <h3 className="text-sm font-medium">Users:</h3>
-                {users.map((user) => (
-                  <div key={user} className="text-sm">
-                    {user}
-                  </div>
-                ))}
-              </div>
-              <Button
-                size="sm"
-                variant="default"
-                className="mt-1 flex w-[55%] items-center justify-around p-1"
-              >
-                <Share size={20} />
-                share room
-              </Button>
-            </div>
-          ))}
-
-        {isJoiningRoom &&
-          (!currentRoom ? (
-            <div className="mb-6">
-              <Input
-                placeholder="Room name"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                className="mb-2 w-full"
-              />
-              <Button
-                onClick={() => console.log("joining room")}
-                className="flex w-full items-center"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Join Room
-              </Button>
-            </div>
-          ) : (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold">Room: {currentRoom}</h2>
-              <div className="mt-2">
-                <h3 className="text-sm font-medium">Users:</h3>
-                {users.map((user) => (
-                  <div key={user} className="text-sm">
-                    {user}
-                  </div>
-                ))}
-              </div>
-              <Button
-                size="sm"
-                variant="default"
-                className="mt-1 flex w-[55%] items-center justify-around p-1"
-              >
-                <Share size={20} />
-                share room
-              </Button>
-            </div>
-          ))}
+            <Button
+              size="sm"
+              variant="default"
+              className="mt-1 flex w-[55%] items-center justify-around p-1"
+            >
+              <Share size={20} />
+              share room
+            </Button>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <Input
+              placeholder="Room name"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+              className="mb-2 w-full"
+            />
+            <Button
+              onClick={isJoiningRoom ? joinRoom : createRoom}
+              className="flex w-full items-center"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {isJoiningRoom ? "Join Room" : "Create Room"}
+            </Button>
+          </div>
+        )}
 
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
