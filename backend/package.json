@@ -16,11 +16,13 @@
   "dependencies": {
     "backend": "file:",
     "express": "^4.21.2",
+    "socket.io": "^4.8.1",
     "tsc-alias": "^1.8.13",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1"
+    "@types/express": "^5.0.1",
+    "@types/socket.io": "^3.0.1"
   }
 }
