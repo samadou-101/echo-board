@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { NavBar } from "@components/home/NavBar";
 import { SideBar } from "@components/home/SideBar";
 import CanvasArea from "@components/home/CanvasArea";
+import socket from "@services/socket-services";
 
 // Main App component
 const Home: React.FC = () => {
@@ -9,6 +10,16 @@ const Home: React.FC = () => {
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
   const [roomName, setRoomName] = useState("");
   const [users, setUsers] = useState<string[]>([]);
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to server with ID " + socket.id);
+    });
+
+    return () => {
+      socket.off("connect");
+    };
+  }, []);
 
   const createRoom = () => {
     if (roomName.trim()) {
