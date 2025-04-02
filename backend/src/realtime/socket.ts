@@ -6,6 +6,7 @@ import {
   getUsersInRoom,
   handleDisconnect,
 } from "./events/room";
+import { handleCursorMove } from "./events/cursor";
 
 export const setupSocket = (server: HttpServer) => {
   const io = new Server(server, {
@@ -51,6 +52,7 @@ export const setupSocket = (server: HttpServer) => {
       socket.emit("room-users", users);
     });
 
+    handleCursorMove(socket, io);
     // Handle disconnection
     socket.on("disconnect", () => {
       console.log(`User Disconnected: ${socket.id}`);
