@@ -12,7 +12,7 @@ export const setupEraseMode = (canvas: Canvas) => {
   });
 };
 
-export const disableEraseMode = (canvas: fabric.Canvas) => {
+export const disableEraseMode = (canvas: Canvas) => {
   canvas.off("mouse:down");
   canvas.selection = true;
   canvas.defaultCursor = "default";
