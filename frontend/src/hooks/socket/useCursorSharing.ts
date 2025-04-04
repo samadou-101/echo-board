@@ -34,10 +34,18 @@ const useCursorSharing = (userId: string | null) => {
       // Only emit if we've moved a meaningful amount or are close to target
       if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
         if (userId) {
+          // Calculate position as percentage of viewport dimensions
+          const xPercent =
+            (currentPosition.current.x / window.innerWidth) * 100;
+          const yPercent =
+            (currentPosition.current.y / window.innerHeight) * 100;
+
           socket.emit("cursor-move", {
             userId,
-            x: Math.round(currentPosition.current.x),
-            y: Math.round(currentPosition.current.y),
+            x: Math.round(xPercent * 100) / 100, // Round to 2 decimal places
+            y: Math.round(yPercent * 100) / 100, // Round to 2 decimal places
+            screenWidth: window.innerWidth, // Optional: send screen dimensions for reference
+            screenHeight: window.innerHeight, // Optional: can be useful for the receiver
           });
         }
       } else {

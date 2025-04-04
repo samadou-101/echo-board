@@ -2,8 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import socket from "@services/socket/socket";
 
 interface CursorPosition {
-  x: number;
-  y: number;
+  x: number; // percentage of screen width (0-100)
+  y: number; // percentage of screen height (0-100)
   targetX: number;
   targetY: number;
   velocityX: number;
@@ -26,16 +26,24 @@ const useCursorTracking = () => {
   const animationFrameId = useRef<number | null>(null);
   const lastFrameTime = useRef<number>(performance.now());
 
+  // Get current viewport dimensions
+  const getViewportDimensions = () => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
   useEffect(() => {
-    // Handle incoming cursor position updates
+    // Handle incoming cursor position updates (now receiving percentages)
     const handleCursorUpdate = ({
       userId,
       x,
       y,
     }: {
       userId: string;
-      x: number;
-      y: number;
+      x: number; // percentage
+      y: number; // percentage
+      screenWidth?: number; // original screen dimensions (optional)
+      screenHeight?: number;
     }) => {
       const now = performance.now();
 
@@ -84,6 +92,7 @@ const useCursorTracking = () => {
       const normalizedDelta = Math.min(deltaTime, 33) / 16.67; // Cap at ~60fps equivalent
 
       let hasUpdates = false;
+      const viewport = getViewportDimensions();
 
       // Process all cursors with spring physics
       Object.keys(cursorData.current).forEach((userId) => {
@@ -125,9 +134,10 @@ const useCursorTracking = () => {
           {};
         Object.keys(cursorData.current).forEach((userId) => {
           const { x, y } = cursorData.current[userId];
+          // Convert percentages to pixel values based on current viewport
           updatedPositions[userId] = {
-            x: Math.round(x),
-            y: Math.round(y),
+            x: Math.round((x / 100) * viewport.width),
+            y: Math.round((y / 100) * viewport.height),
           };
         });
 
@@ -138,8 +148,8 @@ const useCursorTracking = () => {
       animationFrameId.current = requestAnimationFrame(animateCursors);
     };
 
-    // Set up event listener
-    socket.on("cursor-update", handleCursorUpdate);
+    // Set up event listener (changed from "cursor-update" to "cursor-move" to match emitter)
+    socket.on("cursor-move", handleCursorUpdate);
 
     // Start animation loop
     animationFrameId.current = requestAnimationFrame(animateCursors);
@@ -149,7 +159,7 @@ const useCursorTracking = () => {
       if (animationFrameId.current !== null) {
         cancelAnimationFrame(animationFrameId.current);
       }
-      socket.off("cursor-update", handleCursorUpdate);
+      socket.off("cursor-move", handleCursorUpdate);
     };
   }, []);
 
