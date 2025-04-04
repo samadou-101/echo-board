@@ -1,11 +1,7 @@
-// @components/home/CanvasArea.tsx
 import { useState, useRef, useEffect } from "react";
 import Button from "@components/ui/Button";
 import * as Tabs from "@radix-ui/react-tabs";
 import {
-  startDrawing,
-  draw,
-  stopDrawing,
   clearCanvas,
   initializeCanvas,
   applyRemoteDrawing,
@@ -14,6 +10,36 @@ import {
 import { useSocketConnection } from "@hooks/socket/useSocketConnection";
 import socket from "@services/socket/socket";
 import { useAppSelector } from "@hooks/redux/redux-hooks";
+import {
+  drawModeStart,
+  drawModeMove,
+  drawModeStop,
+} from "@utils/canvas/drawMode";
+import {
+  eraseModeStart,
+  eraseModeMove,
+  eraseModeStop,
+} from "@utils/canvas/eraseMode";
+import {
+  circleModeStart,
+  circleModeMove,
+  circleModeStop,
+} from "@utils/canvas/circleMode";
+import {
+  rectangleModeStart,
+  rectangleModeMove,
+  rectangleModeStop,
+} from "@utils/canvas/rectangleMode";
+import {
+  triangleModeStart,
+  triangleModeMove,
+  triangleModeStop,
+} from "@utils/canvas/triangleMode";
+import {
+  rhombusModeStart,
+  rhombusModeMove,
+  rhombusModeStop,
+} from "@utils/canvas/rhombusMode";
 
 export default function CanvasArea() {
   const [isDrawing, setIsDrawing] = useState(false);
@@ -22,10 +48,12 @@ export default function CanvasArea() {
   const [mode, setMode] = useState<
     "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus"
   >("draw");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isDrawEnabled, setIsDrawEnabled] = useState(false);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
     null,
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -37,12 +65,10 @@ export default function CanvasArea() {
 
   useEffect(() => {
     initializeCanvas(canvasRef, previewCanvasRef, contextRef);
-
     setCurrentRoom(roomID);
-    console.log(userId);
+
     const handleRoomJoined = (roomId: string) => {
       console.log("Received room-joined", roomId);
-      // setCurrentRoom(roomId);
     };
 
     const handleRemoteDrawStart = (data: { drawingData: DrawingData }) => {
@@ -59,14 +85,10 @@ export default function CanvasArea() {
     }) => {
       console.log("Received draw-move", data);
       if (!contextRef.current || data.userId === userId) return;
-
       contextRef.current.strokeStyle = data.color;
       contextRef.current.lineWidth = data.lineWidth;
       contextRef.current.lineTo(data.point.x, data.point.y);
       contextRef.current.stroke();
-
-      // Move to the new point for the next segment
-
       contextRef.current.beginPath();
       contextRef.current.moveTo(data.point.x, data.point.y);
     };
@@ -110,7 +132,7 @@ export default function CanvasArea() {
       socket.off("draw-shape", handleRemoteShape);
       socket.off("clear-canvas", handleRemoteClear);
     };
-  }, [userId]);
+  }, [userId, roomID]);
 
   const handleModeChange = (
     newMode: "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus",
@@ -124,7 +146,7 @@ export default function CanvasArea() {
   };
 
   const handleClearCanvas = () => {
-    clearCanvas(canvasRef, contextRef, previewCanvasRef, currentRoom, userId);
+    clearCanvas(canvasRef, contextRef, previewCanvasRef, roomID, userId);
   };
 
   const handleTabChange = (value: string) => {
@@ -134,6 +156,138 @@ export default function CanvasArea() {
       canvasRef.current.style.cursor = "default";
       setIsDrawEnabled(false);
       setMode("draw");
+    }
+  };
+
+  const handleStartDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (mode === "draw") {
+      drawModeStart(
+        e,
+        contextRef,
+        roomID,
+        userId,
+        color,
+        lineWidth,
+        setIsDrawing,
+      );
+    } else if (mode === "erase") {
+      eraseModeStart(e, contextRef, roomID, userId, setIsDrawing);
+    } else if (mode === "circle") {
+      circleModeStart(e, setStartPos, setIsDrawing);
+    } else if (mode === "rectangle") {
+      rectangleModeStart(e, setStartPos, setIsDrawing);
+    } else if (mode === "triangle") {
+      triangleModeStart(e, setStartPos, setIsDrawing);
+    } else if (mode === "rhombus") {
+      rhombusModeStart(e, setStartPos, setIsDrawing);
+    }
+  };
+
+  const handleDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (mode === "draw") {
+      drawModeMove(e, isDrawing, contextRef, roomID, userId, color, lineWidth);
+    } else if (mode === "erase") {
+      eraseModeMove(e, isDrawing, contextRef, roomID, userId);
+    } else if (mode === "circle") {
+      circleModeMove(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        previewCanvasRef,
+      );
+    } else if (mode === "rectangle") {
+      rectangleModeMove(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        previewCanvasRef,
+      );
+    } else if (mode === "triangle") {
+      triangleModeMove(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        previewCanvasRef,
+      );
+    } else if (mode === "rhombus") {
+      rhombusModeMove(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        previewCanvasRef,
+      );
+    }
+  };
+
+  const handleStopDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (mode === "draw") {
+      drawModeStop(isDrawing, contextRef, roomID, userId, setIsDrawing);
+    } else if (mode === "erase") {
+      eraseModeStop(isDrawing, contextRef, roomID, userId, setIsDrawing);
+    } else if (mode === "circle") {
+      circleModeStop(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        contextRef,
+        previewCanvasRef,
+        roomID,
+        userId,
+        setStartPos,
+        setIsDrawing,
+      );
+    } else if (mode === "rectangle") {
+      rectangleModeStop(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        contextRef,
+        previewCanvasRef,
+        roomID,
+        userId,
+        setStartPos,
+        setIsDrawing,
+      );
+    } else if (mode === "triangle") {
+      triangleModeStop(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        contextRef,
+        previewCanvasRef,
+        roomID,
+        userId,
+        setStartPos,
+        setIsDrawing,
+      );
+    } else if (mode === "rhombus") {
+      rhombusModeStop(
+        e,
+        isDrawing,
+        startPos,
+        color,
+        lineWidth,
+        contextRef,
+        previewCanvasRef,
+        roomID,
+        userId,
+        setStartPos,
+        setIsDrawing,
+      );
     }
   };
 
@@ -291,71 +445,10 @@ export default function CanvasArea() {
         <canvas
           ref={canvasRef}
           className="h-full w-full self-center bg-gray-100"
-          onMouseDown={(e) =>
-            startDrawing(
-              e,
-              mode,
-              isDrawEnabled,
-              setStartPos,
-              setIsDrawing,
-              contextRef,
-              // currentRoom,
-              roomID,
-              userId,
-              color,
-              lineWidth,
-            )
-          }
-          onMouseMove={(e) =>
-            draw(
-              e,
-              mode,
-              isDrawing,
-              isDrawEnabled,
-              startPos,
-              color,
-              lineWidth,
-              contextRef,
-              previewCanvasRef,
-              // currentRoom,
-              roomID,
-              userId,
-            )
-          }
-          onMouseUp={(e) =>
-            stopDrawing(
-              e,
-              mode,
-              isDrawing,
-              startPos,
-              color,
-              lineWidth,
-              setStartPos,
-              setIsDrawing,
-              contextRef,
-              previewCanvasRef,
-              // currentRoom,
-              roomID,
-              userId,
-            )
-          }
-          onMouseOut={(e) =>
-            stopDrawing(
-              e,
-              mode,
-              isDrawing,
-              startPos,
-              color,
-              lineWidth,
-              setStartPos,
-              setIsDrawing,
-              contextRef,
-              previewCanvasRef,
-              // currentRoom,
-              roomID,
-              userId,
-            )
-          }
+          onMouseDown={handleStartDrawing}
+          onMouseMove={handleDraw}
+          onMouseUp={handleStopDrawing}
+          onMouseOut={handleStopDrawing}
         />
         <canvas
           ref={previewCanvasRef}
