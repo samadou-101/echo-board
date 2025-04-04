@@ -29,6 +29,7 @@ export default function CanvasArea() {
     | "rectangle"
     | "triangle"
     | "rhombus"
+    | "pan"
   >("select");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<Canvas | null>(null);
@@ -40,6 +41,9 @@ export default function CanvasArea() {
   const lastObjectRef = useRef<unknown>(null);
   const throttleTimeoutRef = useRef<number | null>(null);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  // const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const lastPosX = useRef<number>(0);
+  const lastPosY = useRef<number>(0);
 
   // Initial canvas setup
   useEffect(() => {
@@ -124,16 +128,64 @@ export default function CanvasArea() {
     } else if (mode === "select") {
       canvas.selection = true;
       canvas.defaultCursor = "default";
+      canvas.isDrawingMode = false;
+    } else if (mode === "pan") {
+      canvas.selection = false;
+      canvas.defaultCursor = "grab";
+      canvas.isDrawingMode = false;
     }
 
     // Force render to ensure mode change takes effect immediately
     canvas.renderAll();
   }, [mode, canvas, color, lineWidth]);
 
-  // Effect to handle room initialization
   useEffect(() => {
-    if (canvas && roomId && isCanvasReady) {
-      // Make sure the canvas is visible and properly sized
+    if (!canvas) return;
+
+    // Handle canvas pan mode
+    const handlePanMouseDown = (e: any) => {
+      if (mode !== "pan") return;
+      canvas.defaultCursor = "grabbing";
+      canvas.renderAll();
+      lastPosX.current = e.e.clientX;
+      lastPosY.current = e.e.clientY;
+    };
+
+    const handlePanMouseMove = (e: any) => {
+      if (mode !== "pan" || !lastPosX.current || !lastPosY.current) return;
+
+      const vpt = canvas.viewportTransform;
+      if (!vpt) return;
+
+      const deltaX = e.e.clientX - lastPosX.current;
+      const deltaY = e.e.clientY - lastPosY.current;
+
+      vpt[4] += deltaX;
+      vpt[5] += deltaY;
+
+      canvas.setViewportTransform(vpt);
+      canvas.requestRenderAll();
+
+      lastPosX.current = e.e.clientX;
+      lastPosY.current = e.e.clientY;
+    };
+
+    const handlePanMouseUp = () => {
+      if (mode !== "pan") return;
+      canvas.defaultCursor = "grab";
+      canvas.renderAll();
+      lastPosX.current = 0;
+      lastPosY.current = 0;
+    };
+
+    // Pan events
+    canvas.on("mouse:down", handlePanMouseDown);
+    canvas.on("mouse:move", handlePanMouseMove);
+    canvas.on("mouse:up", handlePanMouseUp);
+
+    // Effect to handle room initialization (shared drawing logic)
+    if (roomId && isCanvasReady) {
+      // Ensure the canvas is properly sized
       if (canvasRef.current && canvasRef.current.parentElement) {
         const container = canvasRef.current.parentElement;
         const { width, height } = container.getBoundingClientRect();
@@ -144,16 +196,22 @@ export default function CanvasArea() {
         }
       }
 
-      // Force a re-render
+      // Force re-render after resizing
       canvas.renderAll();
 
       // Get the initial canvas state from the server
       socket.emit("canvas:request-update", { roomId });
 
-      // Log success for debugging
       console.log("Canvas initialized in room:", roomId);
     }
-  }, [canvas, roomId, isCanvasReady]);
+
+    // Cleanup event listeners
+    return () => {
+      canvas.off("mouse:down", handlePanMouseDown);
+      canvas.off("mouse:move", handlePanMouseMove);
+      canvas.off("mouse:up", handlePanMouseUp);
+    };
+  }, [canvas, roomId, isCanvasReady, mode]);
 
   // Socket emitting and listening
   useEffect(() => {
@@ -392,7 +450,8 @@ export default function CanvasArea() {
       | "circle"
       | "rectangle"
       | "triangle"
-      | "rhombus",
+      | "rhombus"
+      | "pan",
   ) => {
     setMode(newMode);
   };
@@ -496,6 +555,14 @@ export default function CanvasArea() {
               onClick={() => handleModeChange("select")}
             >
               ↖️
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "pan" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              onClick={() => handleModeChange("pan")}
+            >
+              🖐️
             </Button>
           </Tabs.Content>
           <Tabs.Content
@@ -631,6 +698,24 @@ export default function CanvasArea() {
             }}
           />
         </div>
+        <canvas
+          ref={canvasRef}
+          className="h-full w-full"
+          style={{
+            cursor:
+              mode === "draw"
+                ? "crosshair"
+                : mode === "erase"
+                  ? "cell"
+                  : mode === "select"
+                    ? "default"
+                    : mode === "pan"
+                      ? canvas?.defaultCursor === "grabbing"
+                        ? "grabbing"
+                        : "grab"
+                      : "pointer",
+          }}
+        />
       </div>
     </main>
   );
