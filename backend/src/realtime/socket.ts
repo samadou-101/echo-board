@@ -106,6 +106,11 @@ export const setupSocket = (server: HttpServer) => {
       socket.to(data.roomId).emit("clear-canvas");
       console.log("Broadcasting clear-canvas to room", data.roomId);
     });
+    // fabric
+    socket.on("canvas:update", (data: { roomId: string; json: any }) => {
+      if (!data.roomId || !data.json) return;
+      socket.to(data.roomId).emit("canvas:update", { json: data.json });
+    });
 
     socket.on("disconnect", () => {
       console.log(`User Disconnected: ${socket.id}`);

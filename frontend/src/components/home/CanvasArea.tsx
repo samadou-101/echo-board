@@ -8,6 +8,9 @@ import { rhombusModeStart } from "@utils/canvas/rhombusMode";
 import { triangleModeStart } from "@utils/canvas/triangleMode";
 import { setupDrawMode, disableDrawMode } from "@utils/canvas/drawMode";
 import { setupEraseMode, disableEraseMode } from "@utils/canvas/eraseMode";
+import { emitCanvasChange } from "@services/socket/socket-services";
+import { useAppSelector } from "@hooks/redux/redux-hooks";
+import socket from "@services/socket/socket";
 
 export default function CanvasArea() {
   const [mode, setMode] = useState<
@@ -20,10 +23,17 @@ export default function CanvasArea() {
     | "rhombus"
   >("select");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvas, setCanvas] = useState<Canvas>();
+  const [canvas, setCanvas] = useState<Canvas | null>(null);
   const [lineWidth, setLineWidth] = useState<number>(2);
   const [color, setColor] = useState<string>("#000000");
+  const roomId = useAppSelector((state) => state.global.roomId);
+  const isReceivingUpdate = useRef(false);
+  const mouseDownRef = useRef(false);
+  const lastObjectRef = useRef<any>(null);
+  const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
 
+  // Initial canvas setup
   useEffect(() => {
     if (canvasRef.current) {
       const container = canvasRef.current.parentElement;
@@ -33,16 +43,25 @@ export default function CanvasArea() {
         const initCanvas = new Canvas(canvasRef.current, {
           width,
           height,
+          isDrawingMode: false,
+          selection: true,
+          preserveObjectStacking: true,
         });
 
         initCanvas.backgroundColor = "#f3f4f6";
         initCanvas.renderAll();
         setCanvas(initCanvas);
 
+        // Force another render after a slight delay to ensure DOM is ready
+        setTimeout(() => {
+          initCanvas.renderAll();
+          setIsCanvasReady(true);
+        }, 100);
+
         const handleResize = () => {
           const { width, height } = container.getBoundingClientRect();
-          initCanvas.width = width;
-          initCanvas.height = height;
+          initCanvas.setWidth(width);
+          initCanvas.setHeight(height);
           initCanvas.renderAll();
         };
 
@@ -55,6 +74,23 @@ export default function CanvasArea() {
       }
     }
   }, []);
+
+  // Ensure canvas dimensions are correct after all components mount
+  useEffect(() => {
+    if (canvas && canvasRef.current && isCanvasReady) {
+      const container = canvasRef.current.parentElement;
+      if (container) {
+        // Force resize after component is fully mounted
+        const { width, height } = container.getBoundingClientRect();
+
+        if (width > 0 && height > 0) {
+          canvas.setWidth(width);
+          canvas.setHeight(height);
+          canvas.renderAll();
+        }
+      }
+    }
+  }, [canvas, isCanvasReady]);
 
   // Effect to handle mode changes
   useEffect(() => {
@@ -81,7 +117,187 @@ export default function CanvasArea() {
       canvas.selection = true;
       canvas.defaultCursor = "default";
     }
+
+    // Force render to ensure mode change takes effect immediately
+    canvas.renderAll();
   }, [mode, canvas, color, lineWidth]);
+
+  // Effect to handle room initialization
+  useEffect(() => {
+    if (canvas && roomId && isCanvasReady) {
+      // Make sure the canvas is visible and properly sized
+      if (canvasRef.current && canvasRef.current.parentElement) {
+        const container = canvasRef.current.parentElement;
+        const { width, height } = container.getBoundingClientRect();
+
+        if (width > 0 && height > 0) {
+          canvas.setWidth(width);
+          canvas.setHeight(height);
+        }
+      }
+
+      // Force a re-render
+      canvas.renderAll();
+
+      // Get the initial canvas state from the server
+      socket.emit("canvas:request-update", { roomId });
+
+      // Log success for debugging
+      console.log("Canvas initialized in room:", roomId);
+    }
+  }, [canvas, roomId, isCanvasReady]);
+
+  // Socket emitting and listening
+  useEffect(() => {
+    if (!canvas || !roomId) return;
+
+    // Function to throttle updates during continuous drawing/moving
+    const throttledEmitChange = () => {
+      if (isReceivingUpdate.current) return;
+
+      if (!throttleTimeoutRef.current) {
+        // Emit immediately for the first update in a sequence
+        emitCanvasChange(canvas, roomId);
+
+        // Set throttle for subsequent updates
+        throttleTimeoutRef.current = setTimeout(() => {
+          throttleTimeoutRef.current = null;
+          // If still in active drawing/moving, emit again
+          if (mouseDownRef.current) {
+            emitCanvasChange(canvas, roomId);
+          }
+        }, 30); // 30ms throttle for smoother updates
+      }
+    };
+
+    // Track mouse down/up for throttling during active interaction
+    const handleMouseDown = () => {
+      mouseDownRef.current = true;
+    };
+
+    const handleMouseUp = () => {
+      mouseDownRef.current = false;
+      // Always emit on mouse up to ensure final state is synced
+      if (!isReceivingUpdate.current) {
+        emitCanvasChange(canvas, roomId);
+      }
+    };
+
+    // Track object creation and modification for real-time updates
+    const handleObjectAdded = (e: any) => {
+      lastObjectRef.current = e.target;
+      throttledEmitChange();
+    };
+
+    const handleObjectModified = (e: any) => {
+      throttledEmitChange();
+    };
+
+    const handlePathCreated = (e: any) => {
+      throttledEmitChange();
+    };
+
+    // Real-time drawing update during path creation
+    const handleObjectMoving = (e: any) => {
+      if (mouseDownRef.current) {
+        throttledEmitChange();
+      }
+    };
+
+    const handleDrawing = () => {
+      if (canvas.isDrawingMode && mouseDownRef.current) {
+        throttledEmitChange();
+      }
+    };
+
+    // Clean up existing event listeners to prevent duplicates
+    canvas.off("mouse:down", handleMouseDown);
+    canvas.off("mouse:up", handleMouseUp);
+    canvas.off("object:added", handleObjectAdded);
+    canvas.off("object:modified", handleObjectModified);
+    canvas.off("path:created", handlePathCreated);
+    canvas.off("object:moving", handleObjectMoving);
+    canvas.off("after:render", handleDrawing);
+
+    // Attach the event listeners
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:up", handleMouseUp);
+    canvas.on("object:added", handleObjectAdded);
+    canvas.on("object:modified", handleObjectModified);
+    canvas.on("path:created", handlePathCreated);
+    canvas.on("object:moving", handleObjectMoving);
+    canvas.on("after:render", handleDrawing);
+
+    // Handle incoming canvas updates
+    const handleCanvasUpdate = (data: { json: any }) => {
+      if (!data.json) return;
+
+      isReceivingUpdate.current = true;
+
+      try {
+        // Save current canvas state that should be preserved
+        const currentDrawingMode = canvas.isDrawingMode;
+        const currentSelection = canvas.selection;
+        const currentZoom = canvas.getZoom();
+        const currentViewport = canvas.viewportTransform;
+
+        canvas.loadFromJSON(data.json, () => {
+          // Restore canvas state
+          canvas.isDrawingMode = currentDrawingMode;
+          canvas.selection = currentSelection;
+
+          if (currentViewport) {
+            canvas.setViewportTransform(currentViewport);
+          }
+
+          canvas.setZoom(currentZoom);
+
+          // Critical: force a full render
+          canvas.requestRenderAll();
+
+          // Reset the receiving flag after a short delay
+          setTimeout(() => {
+            isReceivingUpdate.current = false;
+          }, 50);
+        });
+      } catch (error) {
+        console.error("Failed to process canvas update:", error);
+        isReceivingUpdate.current = false;
+      }
+    };
+
+    // Handle requests for canvas updates from new users
+    const handleUpdateRequest = (data: { roomId: string }) => {
+      if (data.roomId === roomId && !isReceivingUpdate.current) {
+        emitCanvasChange(canvas, roomId);
+      }
+    };
+
+    // Set up socket listeners
+    socket.off("canvas:update");
+    socket.on("canvas:update", handleCanvasUpdate);
+
+    socket.off("canvas:update-request");
+    socket.on("canvas:update-request", handleUpdateRequest);
+
+    return () => {
+      // Clean up all event listeners
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:up", handleMouseUp);
+      canvas.off("object:added", handleObjectAdded);
+      canvas.off("object:modified", handleObjectModified);
+      canvas.off("path:created", handlePathCreated);
+      canvas.off("object:moving", handleObjectMoving);
+      canvas.off("after:render", handleDrawing);
+
+      socket.off("canvas:update");
+      socket.off("canvas:update-request");
+
+      if (throttleTimeoutRef.current) {
+        clearTimeout(throttleTimeoutRef.current);
+      }
+    };
+  }, [canvas, roomId]);
 
   const handleModeChange = (
     newMode:
@@ -99,6 +315,8 @@ export default function CanvasArea() {
   const handleTabChange = (value: string) => {
     if (value === "select") {
       handleModeChange("select");
+    } else if (value === "draw") {
+      handleModeChange("draw");
     }
   };
 
@@ -107,6 +325,7 @@ export default function CanvasArea() {
       canvas.clear();
       canvas.backgroundColor = "#f3f4f6";
       canvas.renderAll();
+      if (roomId) emitCanvasChange(canvas, roomId);
     }
   };
 
@@ -114,7 +333,6 @@ export default function CanvasArea() {
     const width = parseInt(e.target.value);
     setLineWidth(width);
 
-    // If we're already in draw mode, update it
     if (mode === "draw" && canvas) {
       setupDrawMode(canvas, color, width);
     }
@@ -124,7 +342,6 @@ export default function CanvasArea() {
     const newColor = e.target.value;
     setColor(newColor);
 
-    // If we're already in draw mode, update it
     if (mode === "draw" && canvas) {
       setupDrawMode(canvas, newColor, lineWidth);
     }
@@ -293,9 +510,29 @@ export default function CanvasArea() {
         </Tabs.Root>
       </div>
 
-      <div className="relative flex h-full flex-col md:flex-row">
-        <canvas ref={canvasRef} />
-        <canvas className="pointer-events-none absolute h-full w-full self-center" />
+      <div className="relative flex h-full w-full flex-col md:flex-row">
+        <div className="relative h-full w-full border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
+          {/* Canvas wrapper with visual indicator */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {!isCanvasReady && (
+              <p className="text-gray-500">Loading canvas...</p>
+            )}
+          </div>
+          <canvas
+            ref={canvasRef}
+            className="h-full w-full"
+            style={{
+              cursor:
+                mode === "draw"
+                  ? "crosshair"
+                  : mode === "erase"
+                    ? "cell"
+                    : mode === "select"
+                      ? "default"
+                      : "pointer",
+            }}
+          />
+        </div>
       </div>
     </main>
   );

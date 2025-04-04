@@ -7,7 +7,7 @@ export const rectangleModeStart = (canvas: Canvas) => {
     top: 100,
     width: 100,
     height: 60,
-    fill: "white",
+    fill: "#f3f4f6",
     stroke: "black",
     strokeWidth: 2,
     selectable: true,
