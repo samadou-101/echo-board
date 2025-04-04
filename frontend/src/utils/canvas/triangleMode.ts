@@ -6,7 +6,7 @@ export const triangleModeStart = (canvas: Canvas) => {
     top: 100,
     width: 100,
     height: 100,
-    fill: "white",
+    fill: "#f3f4f6",
     stroke: "black",
     strokeWidth: 2,
     selectable: true,

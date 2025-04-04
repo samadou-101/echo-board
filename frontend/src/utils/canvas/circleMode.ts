@@ -5,7 +5,7 @@ export const circleModeStart = (canvas: Canvas) => {
     left: 100,
     top: 100,
     radius: 50,
-    fill: "white",
+    fill: "#f3f4f6",
     stroke: "black",
     strokeWidth: 2,
     selectable: true,
