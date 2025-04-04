@@ -1,3 +1,4 @@
+// @components/home/CanvasArea.tsx
 import { useState, useRef, useEffect } from "react";
 import Button from "@components/ui/Button";
 import * as Tabs from "@radix-ui/react-tabs";
@@ -7,7 +8,12 @@ import {
   stopDrawing,
   clearCanvas,
   initializeCanvas,
+  applyRemoteDrawing,
+  DrawingData,
 } from "@utils/canvas/canvas-utils";
+import { useSocketConnection } from "@hooks/socket/useSocketConnection";
+import socket from "@services/socket/socket";
+import { useAppSelector } from "@hooks/redux/redux-hooks";
 
 export default function CanvasArea() {
   const [isDrawing, setIsDrawing] = useState(false);
@@ -20,13 +26,91 @@ export default function CanvasArea() {
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
     null,
   );
+  const [currentRoom, setCurrentRoom] = useState<string | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  const userId = useSocketConnection();
+  const roomID = useAppSelector((state) => state.global.roomId);
+
   useEffect(() => {
     initializeCanvas(canvasRef, previewCanvasRef, contextRef);
-  }, []);
+
+    setCurrentRoom(roomID);
+    console.log(userId);
+    const handleRoomJoined = (roomId: string) => {
+      console.log("Received room-joined", roomId);
+      // setCurrentRoom(roomId);
+    };
+
+    const handleRemoteDrawStart = (data: { drawingData: DrawingData }) => {
+      console.log("Received draw-start", data);
+      if (!contextRef.current || data.drawingData.userId === userId) return;
+      applyRemoteDrawing(data.drawingData, contextRef.current);
+    };
+
+    const handleRemoteDrawMove = (data: {
+      point: { x: number; y: number };
+      userId: string;
+      color: string;
+      lineWidth: number;
+    }) => {
+      console.log("Received draw-move", data);
+      if (!contextRef.current || data.userId === userId) return;
+
+      contextRef.current.strokeStyle = data.color;
+      contextRef.current.lineWidth = data.lineWidth;
+      contextRef.current.lineTo(data.point.x, data.point.y);
+      contextRef.current.stroke();
+
+      // Move to the new point for the next segment
+
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(data.point.x, data.point.y);
+    };
+
+    const handleRemoteDrawEnd = (data: { userId: string }) => {
+      console.log("Received draw-end", data);
+      if (!contextRef.current || data.userId === userId) return;
+      contextRef.current.closePath();
+    };
+
+    const handleRemoteShape = (data: { drawingData: DrawingData }) => {
+      console.log("Received draw-shape", data);
+      if (!contextRef.current || data.drawingData.userId === userId) return;
+      applyRemoteDrawing(data.drawingData, contextRef.current);
+    };
+
+    const handleRemoteClear = () => {
+      console.log("Received clear-canvas");
+      if (contextRef.current && canvasRef.current) {
+        contextRef.current.clearRect(
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height,
+        );
+      }
+    };
+
+    socket.on("room-joined", handleRoomJoined);
+    socket.on("draw-start", handleRemoteDrawStart);
+    socket.on("draw-move", handleRemoteDrawMove);
+    socket.on("draw-end", handleRemoteDrawEnd);
+    socket.on("draw-shape", handleRemoteShape);
+    socket.on("clear-canvas", handleRemoteClear);
+
+    return () => {
+      socket.off("room-joined", handleRoomJoined);
+      socket.off("draw-start", handleRemoteDrawStart);
+      socket.off("draw-move", handleRemoteDrawMove);
+      socket.off("draw-end", handleRemoteDrawEnd);
+      socket.off("draw-shape", handleRemoteShape);
+      socket.off("clear-canvas", handleRemoteClear);
+    };
+  }, [userId]);
 
   const handleModeChange = (
     newMode: "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus",
@@ -37,6 +121,10 @@ export default function CanvasArea() {
       canvasRef.current.style.cursor =
         newMode === "erase" ? "cell" : "crosshair";
     }
+  };
+
+  const handleClearCanvas = () => {
+    clearCanvas(canvasRef, contextRef, previewCanvasRef, currentRoom, userId);
   };
 
   const handleTabChange = (value: string) => {
@@ -190,15 +278,14 @@ export default function CanvasArea() {
               variant="outline"
               size="icon"
               className="flex h-8 w-8 items-center justify-center shadow-sm"
-              onClick={() =>
-                clearCanvas(canvasRef, contextRef, previewCanvasRef)
-              }
+              onClick={handleClearCanvas}
             >
               🗑️
             </Button>
           </Tabs.Content>
         </Tabs.Root>
       </div>
+
       <div className="relative flex h-full flex-col md:flex-row">
         <div className="flex-1" />
         <canvas
@@ -212,6 +299,11 @@ export default function CanvasArea() {
               setStartPos,
               setIsDrawing,
               contextRef,
+              // currentRoom,
+              roomID,
+              userId,
+              color,
+              lineWidth,
             )
           }
           onMouseMove={(e) =>
@@ -225,6 +317,9 @@ export default function CanvasArea() {
               lineWidth,
               contextRef,
               previewCanvasRef,
+              // currentRoom,
+              roomID,
+              userId,
             )
           }
           onMouseUp={(e) =>
@@ -239,6 +334,9 @@ export default function CanvasArea() {
               setIsDrawing,
               contextRef,
               previewCanvasRef,
+              // currentRoom,
+              roomID,
+              userId,
             )
           }
           onMouseOut={(e) =>
@@ -253,6 +351,9 @@ export default function CanvasArea() {
               setIsDrawing,
               contextRef,
               previewCanvasRef,
+              // currentRoom,
+              roomID,
+              userId,
             )
           }
         />
