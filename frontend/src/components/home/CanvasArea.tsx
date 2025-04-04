@@ -1,14 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import Button from "@components/ui/Button";
 import * as Tabs from "@radix-ui/react-tabs";
-import { Canvas } from "fabric";
+import {
+  ActiveSelection,
+  Canvas,
+  FabricObject,
+  FabricObjectProps,
+  ObjectEvents,
+  SerializedObjectProps,
+} from "fabric";
 import { rectangleModeStart } from "@utils/canvas/rectangleMode";
 import { circleModeStart } from "@utils/canvas/circleMode";
 import { rhombusModeStart } from "@utils/canvas/rhombusMode";
 import { triangleModeStart } from "@utils/canvas/triangleMode";
 import { setupDrawMode, disableDrawMode } from "@utils/canvas/drawMode";
 import { setupEraseMode, disableEraseMode } from "@utils/canvas/eraseMode";
-import { emitCanvasChange } from "@services/socket/socket-services";
+// import { emitCanvasChange } from "@services/socket/socket-services";
 import { useAppSelector } from "@hooks/redux/redux-hooks";
 import socket from "@services/socket/socket";
 
@@ -29,8 +37,8 @@ export default function CanvasArea() {
   const roomId = useAppSelector((state) => state.global.roomId);
   const isReceivingUpdate = useRef(false);
   const mouseDownRef = useRef(false);
-  const lastObjectRef = useRef<any>(null);
-  const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastObjectRef = useRef<unknown>(null);
+  const throttleTimeoutRef = useRef<number | null>(null);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
 
   // Initial canvas setup
@@ -84,8 +92,8 @@ export default function CanvasArea() {
         const { width, height } = container.getBoundingClientRect();
 
         if (width > 0 && height > 0) {
-          canvas.setWidth(width);
-          canvas.setHeight(height);
+          canvas.width = width;
+          canvas.height = height;
           canvas.renderAll();
         }
       }
@@ -131,8 +139,8 @@ export default function CanvasArea() {
         const { width, height } = container.getBoundingClientRect();
 
         if (width > 0 && height > 0) {
-          canvas.setWidth(width);
-          canvas.setHeight(height);
+          canvas.width = width;
+          canvas.height = height;
         }
       }
 
@@ -151,20 +159,38 @@ export default function CanvasArea() {
   useEffect(() => {
     if (!canvas || !roomId) return;
 
+    // Ensure each object has a unique ID
+    const ensureObjectIds = () => {
+      canvas.forEachObject((obj) => {
+        if (!obj.id) {
+          obj.id = `obj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        }
+      });
+    };
+
+    // Function to emit canvas changes with object IDs
+    const emitCanvasChangeWithIds = () => {
+      if (isReceivingUpdate.current) return;
+
+      ensureObjectIds();
+      const json = canvas.toJSON(["id"]);
+      socket.emit("canvas:update", { roomId, json });
+    };
+
     // Function to throttle updates during continuous drawing/moving
     const throttledEmitChange = () => {
       if (isReceivingUpdate.current) return;
 
       if (!throttleTimeoutRef.current) {
         // Emit immediately for the first update in a sequence
-        emitCanvasChange(canvas, roomId);
+        emitCanvasChangeWithIds();
 
         // Set throttle for subsequent updates
         throttleTimeoutRef.current = setTimeout(() => {
           throttleTimeoutRef.current = null;
           // If still in active drawing/moving, emit again
           if (mouseDownRef.current) {
-            emitCanvasChange(canvas, roomId);
+            emitCanvasChangeWithIds();
           }
         }, 30); // 30ms throttle for smoother updates
       }
@@ -179,26 +205,32 @@ export default function CanvasArea() {
       mouseDownRef.current = false;
       // Always emit on mouse up to ensure final state is synced
       if (!isReceivingUpdate.current) {
-        emitCanvasChange(canvas, roomId);
+        emitCanvasChangeWithIds();
       }
     };
 
-    // Track object creation and modification for real-time updates
+    // Add ID to new objects
     const handleObjectAdded = (e: any) => {
+      if (e.target && !e.target.id) {
+        e.target.id = `obj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      }
       lastObjectRef.current = e.target;
       throttledEmitChange();
     };
 
-    const handleObjectModified = (e: any) => {
+    const handleObjectModified = () => {
       throttledEmitChange();
     };
 
     const handlePathCreated = (e: any) => {
+      if (e.path && !e.path.id) {
+        e.path.id = `path_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      }
       throttledEmitChange();
     };
 
     // Real-time drawing update during path creation
-    const handleObjectMoving = (e: any) => {
+    const handleObjectMoving = () => {
       if (mouseDownRef.current) {
         throttledEmitChange();
       }
@@ -241,6 +273,13 @@ export default function CanvasArea() {
         const currentZoom = canvas.getZoom();
         const currentViewport = canvas.viewportTransform;
 
+        // Save the currently selected objects to restore after load
+        const activeObjects = canvas.getActiveObjects();
+        const activeObjectIds = activeObjects.map((obj) => obj.id || "");
+
+        // Check if selection was active before updating
+        const hadActiveSelection = activeObjects.length > 0;
+
         canvas.loadFromJSON(data.json, () => {
           // Restore canvas state
           canvas.isDrawingMode = currentDrawingMode;
@@ -251,6 +290,34 @@ export default function CanvasArea() {
           }
 
           canvas.setZoom(currentZoom);
+
+          // Re-select any previously selected objects by ID
+          if (activeObjectIds.length > 0 && hadActiveSelection) {
+            const objectsToSelect:
+              | FabricObject<
+                  Partial<FabricObjectProps>,
+                  SerializedObjectProps,
+                  ObjectEvents
+                >[]
+              | undefined = [];
+            canvas.forEachObject((obj) => {
+              if (obj.id && activeObjectIds.includes(obj.id)) {
+                objectsToSelect.push(obj);
+              }
+            });
+
+            if (objectsToSelect.length > 0) {
+              if (objectsToSelect.length === 1) {
+                canvas.setActiveObject(objectsToSelect[0]);
+              } else {
+                // Create active selection with the objects
+                const activeSelection = new ActiveSelection(objectsToSelect, {
+                  canvas,
+                });
+                canvas.setActiveObject(activeSelection);
+              }
+            }
+          }
 
           // Critical: force a full render
           canvas.requestRenderAll();
@@ -269,7 +336,21 @@ export default function CanvasArea() {
     // Handle requests for canvas updates from new users
     const handleUpdateRequest = (data: { roomId: string }) => {
       if (data.roomId === roomId && !isReceivingUpdate.current) {
-        emitCanvasChange(canvas, roomId);
+        emitCanvasChangeWithIds();
+      }
+    };
+
+    // Handle canvas clear operations from other users
+    const handleCanvasClear = (data: { roomId: string }) => {
+      if (data.roomId === roomId) {
+        isReceivingUpdate.current = true;
+        canvas.clear();
+        canvas.backgroundColor = "#f3f4f6";
+        canvas.renderAll();
+
+        setTimeout(() => {
+          isReceivingUpdate.current = false;
+        }, 50);
       }
     };
 
@@ -279,6 +360,9 @@ export default function CanvasArea() {
 
     socket.off("canvas:update-request");
     socket.on("canvas:update-request", handleUpdateRequest);
+
+    socket.off("canvas:clear");
+    socket.on("canvas:clear", handleCanvasClear);
 
     return () => {
       // Clean up all event listeners
@@ -292,6 +376,7 @@ export default function CanvasArea() {
 
       socket.off("canvas:update");
       socket.off("canvas:update-request");
+      socket.off("canvas:clear");
 
       if (throttleTimeoutRef.current) {
         clearTimeout(throttleTimeoutRef.current);
@@ -321,11 +406,24 @@ export default function CanvasArea() {
   };
 
   const handleClearCanvas = () => {
-    if (canvas) {
+    if (canvas && roomId) {
+      // Clear all objects but maintain canvas settings
       canvas.clear();
       canvas.backgroundColor = "#f3f4f6";
       canvas.renderAll();
-      if (roomId) emitCanvasChange(canvas, roomId);
+
+      // Emit a specific clear event
+      socket.emit("canvas:clear", { roomId });
+
+      // Also send the empty canvas state as a backup
+      // isReceivingUpdate.current = false;
+
+      // Wait a short while to ensure the clear has processed
+      // setTimeout(() => {
+      //   if (canvas && roomId) {
+      //     emitCanvasChange(canvas, roomId);
+      //   }
+      // }, 50);
     }
   };
 
