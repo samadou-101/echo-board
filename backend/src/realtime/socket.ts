@@ -111,7 +111,12 @@ export const setupSocket = (server: HttpServer) => {
       if (!data.roomId || !data.json) return;
       socket.to(data.roomId).emit("canvas:update", { json: data.json });
     });
-
+    socket.on("canvas:clear", (data) => {
+      const { roomId } = data;
+      if (roomId) {
+        socket.to(roomId).emit("canvas:clear", { roomId });
+      }
+    });
     socket.on("disconnect", () => {
       console.log(`User Disconnected: ${socket.id}`);
       handleDisconnect(socket, io);
