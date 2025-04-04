@@ -1,3 +1,4 @@
+// @pages/Home.tsx
 import React, { useState, useEffect } from "react";
 import { NavBar } from "@components/home/NavBar";
 import { SideBar } from "@components/home/SideBar";
@@ -11,6 +12,8 @@ import {
 import socket from "@services/socket/socket";
 import useCursorSharing from "@hooks/socket/useCursorSharing";
 import useCursorTracking from "@hooks/socket/userCursorTracking";
+import { setRoomId } from "@redux/slices/globalSlice";
+import { useAppDispatch } from "@hooks/redux/redux-hooks";
 
 const getUserColor = (userId: string) => {
   const hash = userId
@@ -28,22 +31,18 @@ const Home: React.FC = () => {
   const userId = useSocketConnection();
   const cursors = useCursorTracking();
   useCursorSharing(userId);
-
-  // User presence tracking
+  const dispatch = useAppDispatch();
   const [userPresence, setUserPresence] = useState<{
     [userId: string]: { active: boolean; lastActive: number };
   }>({});
 
-  // Track when users were last active
   useEffect(() => {
     const presenceInterval = setInterval(() => {
       const now = Date.now();
       const updatedPresence = { ...userPresence };
       let hasChanges = false;
 
-      // Update activity status for each user
       Object.entries(updatedPresence).forEach(([id, data]) => {
-        // Mark users as inactive after 5 seconds of no movement
         if (data.active && now - data.lastActive > 5000) {
           updatedPresence[id].active = false;
           hasChanges = true;
@@ -58,7 +57,6 @@ const Home: React.FC = () => {
     return () => clearInterval(presenceInterval);
   }, [userPresence]);
 
-  // Update presence when cursor data changes
   useEffect(() => {
     const now = Date.now();
     const updatedPresence = { ...userPresence };
@@ -80,7 +78,6 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const handleUserUpdate = (updatedUsers: string[]) => {
-      console.log("Users in room (real-time):", updatedUsers);
       setUsers(updatedUsers);
     };
 
@@ -94,6 +91,7 @@ const Home: React.FC = () => {
     createRoom(roomName, async (response) => {
       if (response.success && response.roomId) {
         setCurrentRoom(response.roomId);
+        dispatch(setRoomId(response.roomId));
         setRoomName("");
         try {
           const roomUsers = await requestUsersInRoom(response.roomId);
@@ -111,6 +109,7 @@ const Home: React.FC = () => {
     joinRoom(roomName, async (response) => {
       if (response.success && response.roomId) {
         setCurrentRoom(response.roomId);
+        dispatch(setRoomId(response.roomId));
         setRoomName("");
         try {
           const roomUsers = await requestUsersInRoom(response.roomId);
@@ -126,7 +125,6 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-50 text-gray-900 transition-colors duration-200 dark:bg-gray-950 dark:text-gray-100">
-      {/* Cursor container with very high z-index */}
       <div className="pointer-events-none absolute inset-0 z-[1000]">
         {Object.entries(cursors)
           .filter(([id]) => id !== userId)
@@ -146,36 +144,30 @@ const Home: React.FC = () => {
                   transition: "opacity 0.3s ease-out",
                 }}
               >
-                {/* Arrow pointing top-left */}
                 <svg
-                  width="36" // Slightly larger for better presence
+                  width="36"
                   height="36"
                   viewBox="0 0 24 24"
                   fill="none"
                   style={{
-                    transform: "translate(-4px, -12px) rotate(45deg)", // Adjusted positioning
-                    filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))", // Stronger shadow
+                    transform: "translate(-4px, -12px) rotate(45deg)",
+                    filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
                   }}
                 >
                   <path
-                    d="M19 19L12 12L19 5L5 12Z" // Slightly adjusted path for cleaner shape
-                    // fill={getUserColor(id)}
+                    d="M19 19L12 12L19 5L5 12Z"
                     stroke="white"
-                    strokeWidth="4.5" // Thicker stroke for boldness
+                    strokeWidth="4.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{
-                      filter: "brightness(1.1)", // Subtle brightness boost
-                    }}
+                    style={{ filter: "brightness(1.1)" }}
                   />
-                  {/* Optional inner glow effect */}
                   <path
                     d="M19 19L12 12L19 5L5 12Z"
-                    fill={getUserColor(id)} // Light inner glow
+                    fill={getUserColor(id)}
                     stroke="none"
                   />
                 </svg>
-                {/* Username label */}
                 <div
                   style={{
                     position: "absolute",
@@ -186,7 +178,7 @@ const Home: React.FC = () => {
                     fontWeight: "500",
                     fontFamily: "system-ui, -apple-system, sans-serif",
                     whiteSpace: "nowrap",
-                    backgroundColor: `${getUserColor(id)}e0`,
+                    backgroundColor: getUserColor(id),
                     padding: "3px 8px",
                     borderRadius: "12px",
                     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.15)",
