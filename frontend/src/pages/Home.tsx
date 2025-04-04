@@ -138,40 +138,66 @@ const Home: React.FC = () => {
                 className="cursor"
                 style={{
                   position: "absolute",
-                  left: x - 8,
-                  top: y - 8,
-                  width: "16px",
-                  height: "16px",
-                  backgroundColor: getUserColor(id),
-                  borderRadius: "50%",
-                  border: "2px solid white",
-                  boxShadow: "0 0 4px rgba(0, 0, 0, 0.3)",
+                  left: x,
+                  top: y,
                   pointerEvents: "none",
-                  zIndex: 1000, // Ensure cursor is on top
-                  opacity: isActive ? 1 : 0.4,
-                  transform: `translate(0, 0) scale(${isActive ? 1 : 0.8})`,
-                  transition:
-                    "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out",
+                  zIndex: 1000,
+                  opacity: isActive ? 1 : 0.6,
+                  transition: "opacity 0.3s ease-out",
                 }}
               >
+                {/* Arrow pointing top-left */}
+                <svg
+                  width="36" // Slightly larger for better presence
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{
+                    transform: "translate(-4px, -12px) rotate(45deg)", // Adjusted positioning
+                    filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))", // Stronger shadow
+                  }}
+                >
+                  <path
+                    d="M19 19L12 12L19 5L5 12Z" // Slightly adjusted path for cleaner shape
+                    // fill={getUserColor(id)}
+                    stroke="white"
+                    strokeWidth="4.5" // Thicker stroke for boldness
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      filter: "brightness(1.1)", // Subtle brightness boost
+                    }}
+                  />
+                  {/* Optional inner glow effect */}
+                  <path
+                    d="M19 19L12 12L19 5L5 12Z"
+                    fill={getUserColor(id)} // Light inner glow
+                    stroke="none"
+                  />
+                </svg>
+                {/* Username label */}
                 <div
                   style={{
                     position: "absolute",
-                    top: "100%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
+                    top: "14px",
+                    left: "20px",
                     color: "white",
-                    fontSize: "10px",
+                    fontSize: "11px",
+                    fontWeight: "500",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
                     whiteSpace: "nowrap",
-                    backgroundColor: "rgba(0, 0, 0, 0.7)",
-                    padding: "2px 4px",
-                    borderRadius: "2px",
-                    zIndex: 1001, // Label above cursor
-                    opacity: isActive ? 1 : 0.6,
-                    transition: "opacity 0.3s ease-out",
+                    backgroundColor: `${getUserColor(id)}e0`,
+                    padding: "3px 8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.15)",
+                    zIndex: 1001,
+                    opacity: isActive ? 1 : 0.7,
+                    transition: "all 0.3s ease-out",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    backdropFilter: "blur(4px)",
                   }}
                 >
-                  {id.slice(0, 6)}
+                  {id.slice(0, 4)}
                 </div>
               </div>
             );
