@@ -1,293 +1,58 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "@components/ui/Button";
 import * as Tabs from "@radix-ui/react-tabs";
-import {
-  clearCanvas,
-  initializeCanvas,
-  applyRemoteDrawing,
-  DrawingData,
-} from "@utils/canvas/canvas-utils";
-import { useSocketConnection } from "@hooks/socket/useSocketConnection";
-import socket from "@services/socket/socket";
-import { useAppSelector } from "@hooks/redux/redux-hooks";
-import {
-  drawModeStart,
-  drawModeMove,
-  drawModeStop,
-} from "@utils/canvas/drawMode";
-import {
-  eraseModeStart,
-  eraseModeMove,
-  eraseModeStop,
-} from "@utils/canvas/eraseMode";
-import {
-  circleModeStart,
-  circleModeMove,
-  circleModeStop,
-} from "@utils/canvas/circleMode";
-import {
-  rectangleModeStart,
-  rectangleModeMove,
-  rectangleModeStop,
-} from "@utils/canvas/rectangleMode";
-import {
-  triangleModeStart,
-  triangleModeMove,
-  triangleModeStop,
-} from "@utils/canvas/triangleMode";
-import {
-  rhombusModeStart,
-  rhombusModeMove,
-  rhombusModeStop,
-} from "@utils/canvas/rhombusMode";
-
+import { Canvas } from "fabric";
+import { rectangleModeStart } from "@utils/canvas/rectangleMode";
+import { circleModeStart } from "@utils/canvas/circleMode";
+import { rhombusModeStart } from "@utils/canvas/rhombusMode";
+import { triangleModeStart } from "@utils/canvas/triangleMode";
 export default function CanvasArea() {
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [lineWidth, setLineWidth] = useState<number>(2);
-  const [color, setColor] = useState<string>("#000000");
   const [mode, setMode] = useState<
     "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus"
   >("draw");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isDrawEnabled, setIsDrawEnabled] = useState(false);
-  const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
-    null,
-  );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentRoom, setCurrentRoom] = useState<string | null>(null);
-
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const userId = useSocketConnection();
-  const roomID = useAppSelector((state) => state.global.roomId);
-
+  const [canvas, setCanvas] = useState<Canvas>();
   useEffect(() => {
-    initializeCanvas(canvasRef, previewCanvasRef, contextRef);
-    setCurrentRoom(roomID);
+    if (canvasRef.current) {
+      const container = canvasRef.current.parentElement;
+      if (container) {
+        const { width, height } = container.getBoundingClientRect();
 
-    const handleRoomJoined = (roomId: string) => {
-      console.log("Received room-joined", roomId);
-    };
+        const initCanvas = new Canvas(canvasRef.current, {
+          width,
+          height,
+        });
 
-    const handleRemoteDrawStart = (data: { drawingData: DrawingData }) => {
-      console.log("Received draw-start", data);
-      if (!contextRef.current || data.drawingData.userId === userId) return;
-      applyRemoteDrawing(data.drawingData, contextRef.current);
-    };
+        initCanvas.backgroundColor = "#f3f4f6";
+        initCanvas.renderAll();
+        setCanvas(initCanvas);
 
-    const handleRemoteDrawMove = (data: {
-      point: { x: number; y: number };
-      userId: string;
-      color: string;
-      lineWidth: number;
-    }) => {
-      console.log("Received draw-move", data);
-      if (!contextRef.current || data.userId === userId) return;
-      contextRef.current.strokeStyle = data.color;
-      contextRef.current.lineWidth = data.lineWidth;
-      contextRef.current.lineTo(data.point.x, data.point.y);
-      contextRef.current.stroke();
-      contextRef.current.beginPath();
-      contextRef.current.moveTo(data.point.x, data.point.y);
-    };
+        const handleResize = () => {
+          const { width, height } = container.getBoundingClientRect();
+          initCanvas.width = width;
+          initCanvas.height = height;
+          initCanvas.renderAll();
+        };
 
-    const handleRemoteDrawEnd = (data: { userId: string }) => {
-      console.log("Received draw-end", data);
-      if (!contextRef.current || data.userId === userId) return;
-      contextRef.current.closePath();
-    };
+        window.addEventListener("resize", handleResize);
 
-    const handleRemoteShape = (data: { drawingData: DrawingData }) => {
-      console.log("Received draw-shape", data);
-      if (!contextRef.current || data.drawingData.userId === userId) return;
-      applyRemoteDrawing(data.drawingData, contextRef.current);
-    };
-
-    const handleRemoteClear = () => {
-      console.log("Received clear-canvas");
-      if (contextRef.current && canvasRef.current) {
-        contextRef.current.clearRect(
-          0,
-          0,
-          canvasRef.current.width,
-          canvasRef.current.height,
-        );
+        return () => {
+          window.removeEventListener("resize", handleResize);
+          initCanvas.dispose();
+        };
       }
-    };
-
-    socket.on("room-joined", handleRoomJoined);
-    socket.on("draw-start", handleRemoteDrawStart);
-    socket.on("draw-move", handleRemoteDrawMove);
-    socket.on("draw-end", handleRemoteDrawEnd);
-    socket.on("draw-shape", handleRemoteShape);
-    socket.on("clear-canvas", handleRemoteClear);
-
-    return () => {
-      socket.off("room-joined", handleRoomJoined);
-      socket.off("draw-start", handleRemoteDrawStart);
-      socket.off("draw-move", handleRemoteDrawMove);
-      socket.off("draw-end", handleRemoteDrawEnd);
-      socket.off("draw-shape", handleRemoteShape);
-      socket.off("clear-canvas", handleRemoteClear);
-    };
-  }, [userId, roomID]);
+    }
+  }, []);
 
   const handleModeChange = (
     newMode: "draw" | "erase" | "circle" | "rectangle" | "triangle" | "rhombus",
   ) => {
     setMode(newMode);
-    setIsDrawEnabled(newMode === "draw" || newMode === "erase");
-    if (canvasRef.current) {
-      canvasRef.current.style.cursor =
-        newMode === "erase" ? "cell" : "crosshair";
-    }
   };
-
-  const handleClearCanvas = () => {
-    clearCanvas(canvasRef, contextRef, previewCanvasRef, roomID, userId);
-  };
-
   const handleTabChange = (value: string) => {
     if (value === "draw") {
       handleModeChange("draw");
-    } else if (canvasRef.current) {
-      canvasRef.current.style.cursor = "default";
-      setIsDrawEnabled(false);
-      setMode("draw");
-    }
-  };
-
-  const handleStartDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (mode === "draw") {
-      drawModeStart(
-        e,
-        contextRef,
-        roomID,
-        userId,
-        color,
-        lineWidth,
-        setIsDrawing,
-      );
-    } else if (mode === "erase") {
-      eraseModeStart(e, contextRef, roomID, userId, setIsDrawing);
-    } else if (mode === "circle") {
-      circleModeStart(e, setStartPos, setIsDrawing);
-    } else if (mode === "rectangle") {
-      rectangleModeStart(e, setStartPos, setIsDrawing);
-    } else if (mode === "triangle") {
-      triangleModeStart(e, setStartPos, setIsDrawing);
-    } else if (mode === "rhombus") {
-      rhombusModeStart(e, setStartPos, setIsDrawing);
-    }
-  };
-
-  const handleDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (mode === "draw") {
-      drawModeMove(e, isDrawing, contextRef, roomID, userId, color, lineWidth);
-    } else if (mode === "erase") {
-      eraseModeMove(e, isDrawing, contextRef, roomID, userId);
-    } else if (mode === "circle") {
-      circleModeMove(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        previewCanvasRef,
-      );
-    } else if (mode === "rectangle") {
-      rectangleModeMove(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        previewCanvasRef,
-      );
-    } else if (mode === "triangle") {
-      triangleModeMove(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        previewCanvasRef,
-      );
-    } else if (mode === "rhombus") {
-      rhombusModeMove(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        previewCanvasRef,
-      );
-    }
-  };
-
-  const handleStopDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (mode === "draw") {
-      drawModeStop(isDrawing, contextRef, roomID, userId, setIsDrawing);
-    } else if (mode === "erase") {
-      eraseModeStop(isDrawing, contextRef, roomID, userId, setIsDrawing);
-    } else if (mode === "circle") {
-      circleModeStop(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        contextRef,
-        previewCanvasRef,
-        roomID,
-        userId,
-        setStartPos,
-        setIsDrawing,
-      );
-    } else if (mode === "rectangle") {
-      rectangleModeStop(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        contextRef,
-        previewCanvasRef,
-        roomID,
-        userId,
-        setStartPos,
-        setIsDrawing,
-      );
-    } else if (mode === "triangle") {
-      triangleModeStop(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        contextRef,
-        previewCanvasRef,
-        roomID,
-        userId,
-        setStartPos,
-        setIsDrawing,
-      );
-    } else if (mode === "rhombus") {
-      rhombusModeStop(
-        e,
-        isDrawing,
-        startPos,
-        color,
-        lineWidth,
-        contextRef,
-        previewCanvasRef,
-        roomID,
-        userId,
-        setStartPos,
-        setIsDrawing,
-      );
     }
   };
 
@@ -339,7 +104,8 @@ export default function CanvasArea() {
               variant="outline"
               size="icon"
               className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "rectangle" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
-              onClick={() => handleModeChange("rectangle")}
+              // onClick={() => handleModeChange("rectangle")}
+              onClick={() => rectangleModeStart(canvas!)}
             >
               ◻️
             </Button>
@@ -347,7 +113,7 @@ export default function CanvasArea() {
               variant="outline"
               size="icon"
               className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "circle" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
-              onClick={() => handleModeChange("circle")}
+              onClick={() => circleModeStart(canvas!)}
             >
               ○
             </Button>
@@ -355,7 +121,7 @@ export default function CanvasArea() {
               variant="outline"
               size="icon"
               className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "rhombus" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
-              onClick={() => handleModeChange("rhombus")}
+              onClick={() => rhombusModeStart(canvas!)}
             >
               ◇
             </Button>
@@ -363,7 +129,7 @@ export default function CanvasArea() {
               variant="outline"
               size="icon"
               className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "triangle" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
-              onClick={() => handleModeChange("triangle")}
+              onClick={() => triangleModeStart(canvas!)}
             >
               △
             </Button>
@@ -400,7 +166,7 @@ export default function CanvasArea() {
           >
             <select
               className="h-8 rounded border px-2 dark:bg-gray-800"
-              onChange={(e) => setLineWidth(Number(e.target.value))}
+              onChange={() => {}}
             >
               <option value="2">Thin (2px)</option>
               <option value="5">Medium (5px)</option>
@@ -409,8 +175,8 @@ export default function CanvasArea() {
             <input
               type="color"
               className="h-8 w-8 rounded"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
+              value="#000000"
+              onChange={() => {}}
             />
             <Button
               variant="outline"
@@ -432,7 +198,7 @@ export default function CanvasArea() {
               variant="outline"
               size="icon"
               className="flex h-8 w-8 items-center justify-center shadow-sm"
-              onClick={handleClearCanvas}
+              onClick={() => {}}
             >
               🗑️
             </Button>
@@ -441,19 +207,8 @@ export default function CanvasArea() {
       </div>
 
       <div className="relative flex h-full flex-col md:flex-row">
-        <div className="flex-1" />
-        <canvas
-          ref={canvasRef}
-          className="h-full w-full self-center bg-gray-100"
-          onMouseDown={handleStartDrawing}
-          onMouseMove={handleDraw}
-          onMouseUp={handleStopDrawing}
-          onMouseOut={handleStopDrawing}
-        />
-        <canvas
-          ref={previewCanvasRef}
-          className="pointer-events-none absolute h-full w-full self-center"
-        />
+        <canvas ref={canvasRef} />
+        <canvas className="pointer-events-none absolute h-full w-full self-center" />
       </div>
     </main>
   );
