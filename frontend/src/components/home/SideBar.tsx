@@ -32,7 +32,7 @@ export const SideBar: React.FC<SideBarProps> = ({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
+      className={`fixed inset-y-0 left-0 z-40 min-w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
