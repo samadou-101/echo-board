@@ -506,7 +506,7 @@ export default function CanvasArea() {
 
   return (
     <main className="relative flex h-[calc(100vh-4rem)] flex-1 flex-col pt-24 transition-colors duration-200 dark:bg-gray-900">
-      <div className="absolute top-4 left-1/2 z-10 h-fit max-w-xs -translate-x-1/2 px-4 sm:max-w-md md:max-w-lg">
+      <div className="fixed top-24 left-[55%] z-10 w-[30%] max-w-screen-lg -translate-x-1/2 transform px-4 max-2xl:w-[40%] max-xl:w-[45%] max-lg:left-[65%] max-lg:w-[60%] max-md:left-1/2 max-md:w-[80%]">
         <Tabs.Root
           defaultValue="select"
           onValueChange={handleTabChange}
@@ -676,14 +676,12 @@ export default function CanvasArea() {
       </div>
 
       <div className="relative flex h-full w-full flex-col md:flex-row">
-        <div className="relative h-full w-full border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
-          {/* Canvas wrapper with visual indicator */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            {!isCanvasReady && (
-              <p className="text-gray-500">Loading canvas...</p>
-            )}
-          </div>
-          <canvas
+        {/* <div className="relative h-full w-full border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"> */}
+        {/* Canvas wrapper with visual indicator */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {!isCanvasReady && <p className="text-gray-500">Loading canvas...</p>}
+        </div>
+        {/* <canvas
             ref={canvasRef}
             className="h-full w-full"
             style={{
@@ -696,8 +694,8 @@ export default function CanvasArea() {
                       ? "default"
                       : "pointer",
             }}
-          />
-        </div>
+          /> */}
+        {/* </div> */}
         <canvas
           ref={canvasRef}
           className="h-full w-full"
