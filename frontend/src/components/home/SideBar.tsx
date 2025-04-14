@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import * as Separator from "@radix-ui/react-separator";
-import { Plus, Grid, Settings, Share } from "lucide-react";
+import { Plus, Settings, Share } from "lucide-react";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Inputs";
 import * as Tabs from "@radix-ui/react-tabs";
@@ -95,7 +95,7 @@ export const SideBar: React.FC<SideBarProps> = ({
           </div>
         )}
 
-        <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             Projects
           </h2>
@@ -103,46 +103,7 @@ export const SideBar: React.FC<SideBarProps> = ({
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <div className="space-y-2">
-          <Button
-            variant="ghost"
-            className="flex w-full items-center justify-start shadow-sm"
-          >
-            <Grid className="mr-2 h-4 w-4" /> Marketing Campaign
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex w-full items-center justify-start"
-          >
-            <Grid className="mr-2 h-4 w-4" /> User Flow Diagram
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex w-full items-center justify-start"
-          >
-            <Grid className="mr-2 h-4 w-4" /> System Architecture
-          </Button>
-        </div>
-        <Separator.Root className="my-6 h-px bg-gray-200 dark:bg-gray-800" />
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Templates
-          </h2>
-        </div>
-        <div className="space-y-2">
-          <Button variant="ghost" className="w-full justify-start">
-            Mind Map
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            Flowchart
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            Kanban Board
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            Wireframe
-          </Button>
-        </div>
+        <Separator.Root className="mt-2 h-px bg-gray-200 dark:bg-gray-800" />
         <div className="mt-auto">
           <Button
             variant="outline"
