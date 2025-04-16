@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import socket from "@services/socket/socket";
-import { useAppSelector } from "@hooks/redux/redux-hooks";
-
+import { useAppDispatch, useAppSelector } from "@hooks/redux/redux-hooks";
+import { PanelRightClose } from "lucide-react";
+import { setIsChatOpen } from "@redux/slices/globalSlice";
 interface ChatMessage {
   userId: string;
   message: string;
@@ -13,6 +14,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
   roomId,
 }) => {
   const isOpen = useAppSelector((state) => state.global.isChatOpen);
+  const dispatch = useAppDispatch();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -146,9 +148,12 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                   {roomId ? `Room: ${roomId.slice(0, 8)}...` : "Chat"}
                 </h3>
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-300">
-                {messages.length} messages
-              </span>
+              <button
+                className="text-xs text-gray-500 dark:text-gray-300"
+                onClick={() => dispatch(setIsChatOpen(!isOpen))}
+              >
+                <PanelRightClose className="cursor-pointer" />
+              </button>
             </div>
           </div>
 
