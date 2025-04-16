@@ -36,7 +36,6 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
     socket.on("chat-message", handleMessage);
     socket.on("typing", handleTyping);
 
-    // Load previous messages
     socket.emit("get-messages", roomId, (previousMessages: ChatMessage[]) => {
       if (Array.isArray(previousMessages)) {
         setMessages(previousMessages);
@@ -53,7 +52,6 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus textarea when chat is opened
   useEffect(() => {
     if (isOpen && textareaRef.current) {
       setTimeout(() => {
@@ -70,14 +68,9 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
         timestamp: Date.now(),
       };
 
-      // Add message to local state immediately
       setMessages((prev) => [...prev, chatMessage]);
-
-      // Then emit to server
       socket.emit("chat-message", { roomId, message: chatMessage });
       setMessage("");
-
-      // Stop typing indicator
       socket.emit("typing", { roomId, userId, isTyping: false });
     }
   };
@@ -92,7 +85,6 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
 
-    // Handle typing indicator
     if (roomId) {
       socket.emit("typing", { roomId, userId, isTyping: true });
 
@@ -106,10 +98,8 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
     }
   };
 
-  // Add a placeholder message if no messages exist
   useEffect(() => {
     if (roomId && messages.length === 0) {
-      // Add a welcome message if there are no messages
       setMessages([
         {
           userId: "system",
@@ -120,7 +110,6 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
     }
   }, [roomId, messages.length]);
 
-  // Group messages by date
   const groupedMessages = messages.reduce(
     (groups: Record<string, ChatMessage[]>, message) => {
       const date = new Date(message.timestamp).toLocaleDateString();
@@ -133,7 +122,6 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
     {},
   );
 
-  // Format timestamp
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString([], {
       hour: "2-digit",
@@ -145,20 +133,20 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
     <div
       className={`fixed top-16 right-0 h-[calc(100vh-4rem)] transition-all duration-300 ${
         isOpen ? "w-96" : "w-0"
-      } overflow-hidden bg-gradient-to-b from-blue-50 to-indigo-50 shadow-2xl dark:from-gray-900 dark:to-indigo-950`}
+      } overflow-hidden bg-white/70 shadow-lg backdrop-blur-md dark:bg-gray-900/70`}
     >
       {isOpen && (
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="bg-white p-4 shadow-md dark:bg-gray-800">
+          <div className="border-b border-gray-200 p-4 dark:border-gray-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                <h3 className="font-medium text-gray-800 dark:text-white">
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">
                   {roomId ? `Room: ${roomId.slice(0, 8)}...` : "Chat"}
                 </h3>
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-300">
                 {messages.length} messages
               </span>
             </div>
@@ -172,10 +160,10 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                   <div key={date} className="mb-6">
                     <div className="relative mb-4">
                       <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                        <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
                       </div>
                       <div className="relative flex justify-center">
-                        <span className="bg-blue-50 px-2 text-xs text-gray-500 dark:bg-indigo-950 dark:text-gray-400">
+                        <span className="bg-white/70 px-2 text-xs text-gray-500 dark:bg-gray-900/70 dark:text-gray-300">
                           {new Date(date).toLocaleDateString(undefined, {
                             weekday: "long",
                             month: "short",
@@ -198,7 +186,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                       >
                         {(msg.userId !== userId || index === 0) &&
                           msg.userId !== "system" && (
-                            <div className="mr-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                            <div className="mr-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200">
                               {msg.userId.slice(0, 2).toUpperCase()}
                             </div>
                           )}
@@ -207,8 +195,8 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                             msg.userId === "system"
                               ? "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
                               : msg.userId === userId && index !== 0
-                                ? "bg-blue-600 text-white"
-                                : "bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100"
+                                ? "bg-blue-500 text-white dark:bg-blue-400"
+                                : "bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-200"
                           }`}
                         >
                           <p className="overflow-hidden text-sm break-words whitespace-pre-wrap">
@@ -218,8 +206,8 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                             <span
                               className={`block text-right text-xs ${
                                 msg.userId === userId && index !== 0
-                                  ? "text-blue-200"
-                                  : "text-gray-500 dark:text-gray-400"
+                                  ? "text-gray-200"
+                                  : "text-gray-500 dark:text-gray-300"
                               }`}
                             >
                               {formatTime(msg.timestamp)}
@@ -227,7 +215,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                           )}
                         </div>
                         {msg.userId === userId && index !== 0 && (
-                          <div className="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
+                          <div className="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white dark:bg-blue-400">
                             YOU
                           </div>
                         )}
@@ -237,7 +225,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                 ))
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
+                  <div className="text-center text-gray-500 dark:text-gray-300">
                     <p>No messages yet</p>
                     <p className="mt-2 text-xs">
                       Send your first message below
@@ -247,7 +235,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
               )
             ) : (
               <div className="flex h-full items-center justify-center">
-                <div className="text-center text-gray-500 dark:text-gray-400">
+                <div className="text-center text-gray-500 dark:text-gray-300">
                   <p>No room selected</p>
                   <p className="mt-2 text-xs">Join a room to start chatting</p>
                 </div>
@@ -258,15 +246,15 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                 <div className="rounded-2xl bg-gray-200 px-4 py-2 dark:bg-gray-800">
                   <div className="flex space-x-1">
                     <div
-                      className="h-2 w-2 animate-bounce rounded-full bg-gray-500 dark:bg-gray-400"
+                      className="h-2 w-2 animate-bounce rounded-full bg-gray-500 dark:bg-gray-300"
                       style={{ animationDelay: "0ms" }}
                     ></div>
                     <div
-                      className="h-2 w-2 animate-bounce rounded-full bg-gray-500 dark:bg-gray-400"
+                      className="h-2 w-2 animate-bounce rounded-full bg-gray-500 dark:bg-gray-300"
                       style={{ animationDelay: "300ms" }}
                     ></div>
                     <div
-                      className="h-2 w-2 animate-bounce rounded-full bg-gray-500 dark:bg-gray-400"
+                      className="h-2 w-2 animate-bounce rounded-full bg-gray-500 dark:bg-gray-300"
                       style={{ animationDelay: "600ms" }}
                     ></div>
                   </div>
@@ -277,11 +265,11 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
           </div>
 
           {/* Input area */}
-          <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
             <div className="relative">
               <textarea
                 ref={textareaRef}
-                className="w-full resize-none rounded-2xl bg-gray-100 px-4 py-3 pr-12 text-gray-800 placeholder-gray-500 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                className="w-full resize-none rounded-2xl bg-gray-100 px-4 py-3 pr-12 text-gray-800 placeholder-gray-500 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-300"
                 value={message}
                 onChange={handleChange}
                 onKeyPress={handleKeyPress}
@@ -293,7 +281,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
                 style={{ minHeight: "46px", maxHeight: "120px" }}
               />
               <button
-                className="absolute right-2 bottom-2 rounded-full bg-blue-600 p-2 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                className="absolute right-2 bottom-2 rounded-full bg-blue-500 p-2 text-white transition-all duration-200 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 dark:bg-blue-400 dark:hover:bg-blue-500"
                 onClick={sendMessage}
                 disabled={!message.trim() || !roomId}
               >
@@ -315,10 +303,10 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
             </div>
             {roomId && (
               <div className="mt-2 flex items-center justify-between">
-                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-300">
                   <span>Shift+Enter for new line</span>
                 </div>
-                <div className="text-xs text-blue-600 dark:text-blue-400">
+                <div className="text-xs text-blue-500 dark:text-blue-400">
                   {message.length}/500
                 </div>
               </div>
