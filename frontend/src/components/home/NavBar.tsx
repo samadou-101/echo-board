@@ -10,7 +10,6 @@ import {
   PanelLeft,
   Layers,
   LogOut,
-  // Share2,
 } from "lucide-react";
 import Button from "@components/ui/Button";
 import ThemeToggle from "@components/ui/ThemeToggle";

@@ -14,6 +14,8 @@ import useCursorSharing from "@hooks/socket/useCursorSharing";
 import useCursorTracking from "@hooks/socket/userCursorTracking";
 import { setRoomId } from "@redux/slices/globalSlice";
 import { useAppDispatch } from "@hooks/redux/redux-hooks";
+import Chat from "@components/home/Chat";
+import OptionsPanel from "@components/home/OptionsPanel";
 
 const getUserColor = (userId: string) => {
   const hash = userId
@@ -197,6 +199,7 @@ const Home: React.FC = () => {
       </div>
 
       <NavBar setSidebarOpen={setSidebarOpen} />
+      <OptionsPanel />
       <div className="flex min-h-screen flex-1 flex-col pt-16 md:flex-row">
         <SideBar
           sidebarOpen={sidebarOpen}
@@ -208,6 +211,7 @@ const Home: React.FC = () => {
           users={users}
         />
         <CanvasArea />
+        <Chat userId={userId!} roomId={currentRoom} />
       </div>
     </div>
   );

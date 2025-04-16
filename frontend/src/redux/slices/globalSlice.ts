@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface GlobalState {
   roomId: string | null;
+  isChatOpen: boolean;
 }
 
 const initialState: GlobalState = {
   roomId: null,
+  isChatOpen: false,
 };
 
 export const globalSlice = createSlice({
@@ -18,8 +20,11 @@ export const globalSlice = createSlice({
     clearRoomId: (state) => {
       state.roomId = null;
     },
+    setIsChatOpen: (state, action: PayloadAction<boolean>) => {
+      state.isChatOpen = action.payload;
+    },
   },
 });
 
-export const { setRoomId, clearRoomId } = globalSlice.actions;
+export const { setRoomId, clearRoomId, setIsChatOpen } = globalSlice.actions;
 export default globalSlice.reducer;

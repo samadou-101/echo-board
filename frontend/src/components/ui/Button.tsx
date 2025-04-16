@@ -1,8 +1,11 @@
+import React from "react";
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "outline" | "ghost" | "secondary";
   size?: "default" | "sm" | "lg" | "icon";
   children: React.ReactNode;
 }
+
 const Button: React.FC<ButtonProps> = ({
   variant = "default",
   size = "default",
@@ -11,7 +14,7 @@ const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    "font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+    "font-medium rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   const variantStyles = {
     default:
       "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-md hover:shadow-lg",
@@ -29,6 +32,7 @@ const Button: React.FC<ButtonProps> = ({
     icon: "p-2.5",
   };
   const styles = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
+
   return (
     <button className={styles} {...props}>
       {children}
