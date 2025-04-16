@@ -11,6 +11,7 @@ import socket from "@services/socket/socket";
 import { useInitCanvas } from "@hooks/canvas/useInitCanvas";
 import { useCanvasMode } from "@hooks/canvas/useCanvasMode";
 import { useCanvasSync } from "@hooks/canvas/useCanvasSync";
+import { Hand, Maximize, MousePointer2 } from "lucide-react";
 
 export default function CanvasArea() {
   const [mode, setMode] = useState<
@@ -240,18 +241,18 @@ export default function CanvasArea() {
             <Button
               variant="outline"
               size="icon"
-              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "select" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              className={`flex h-9 w-9 items-center justify-center shadow-sm ${mode === "select" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
               onClick={() => handleModeChange("select")}
             >
-              ↖️
+              <MousePointer2 />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className={`flex h-8 w-8 items-center justify-center shadow-sm ${mode === "pan" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
+              className={`flex h-9 w-9 items-center justify-center shadow-sm ${mode === "pan" ? "border-blue-500 bg-blue-100 dark:bg-blue-900" : ""}`}
               onClick={() => handleModeChange("pan")}
             >
-              🖐️
+              <Hand style={{ width: "32px", height: "32px" }} />
             </Button>
           </Tabs.Content>
           <Tabs.Content

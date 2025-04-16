@@ -99,9 +99,6 @@ export const SideBar: React.FC<SideBarProps> = ({
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             Projects
           </h2>
-          <Button size="sm" variant="ghost" className="p-1">
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
         <Separator.Root className="mt-2 h-px bg-gray-200 dark:bg-gray-800" />
         <div className="mt-auto">
