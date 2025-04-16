@@ -163,18 +163,31 @@ export default function CanvasArea() {
       handleModeChange("draw");
     }
   };
-
   const handleClearCanvas = () => {
-    if (canvas && roomId) {
+    if (canvas) {
       // Clear all objects but maintain canvas settings
       canvas.clear();
       canvas.backgroundColor = "#f3f4f6";
       canvas.renderAll();
 
-      // Emit a specific clear event
-      socket.emit("canvas:clear", { roomId });
+      // Only emit to socket if inside a room
+      if (roomId) {
+        socket.emit("canvas:clear", { roomId });
+      }
     }
   };
+
+  // const handleClearCanvas = () => {
+  //   if (canvas && roomId) {
+  //     // Clear all objects but maintain canvas settings
+  //     canvas.clear();
+  //     canvas.backgroundColor = "#f3f4f6";
+  //     canvas.renderAll();
+
+  //     // Emit a specific clear event
+  //     socket.emit("canvas:clear", { roomId });
+  //   }
+  // };
 
   const handleLineWidthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const width = parseInt(e.target.value);
