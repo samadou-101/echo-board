@@ -18,21 +18,22 @@ import Login from "./Login";
 import Signup from "./Signup";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@config/firebase";
-// import { Canvas } from "fabric";
-// import { saveCanvas } from "@services/canvas/saveCanvas";
+import { Canvas } from "fabric";
 
 interface NavBarProps {
+  canvas: Canvas | null;
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  // canvas: Canvas | null; // Add canvas prop
 }
 
-export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
+export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
       setIsLoggedIn(true);
-    } else setIsLoggedIn(false);
+    } else {
+      setIsLoggedIn(false);
+    }
   });
 
   const handleLogin = () => {
@@ -54,14 +55,32 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
     setIsLoggedIn(false);
   };
 
-  // const handleSaveCanvas = async () => {
-  //   try {
-  //     await saveCanvas(canvas, "Canvas Drawing");
-  //     console.log("Canvas saved successfully");
-  //   } catch (error) {
-  //     console.error("Failed to save canvas:", error);
-  //   }
-  // };
+  const handleSaveCanvas = async () => {
+    if (!canvas) {
+      console.error("No canvas available to save");
+      return;
+    }
+    try {
+      // Serialize canvas to JSON
+      const json = JSON.stringify(
+        canvas.toJSON(["id", "selectable", "evented"]),
+      );
+      // Send to server
+      const response = await fetch("/api/save-canvas", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ canvas: json }),
+      });
+      if (!response.ok) {
+        throw new Error(`Server responded with status ${response.status}`);
+      }
+      console.log("Canvas saved successfully to server");
+    } catch (error) {
+      console.error("Failed to save canvas:", error);
+    }
+  };
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center border-b border-gray-200 bg-white/80 px-4 shadow-sm backdrop-blur-md sm:px-6 dark:border-gray-800 dark:bg-gray-900/80">
@@ -93,7 +112,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
               </DropdownMenu.Item>
               <DropdownMenu.Item
                 className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
-                // onClick={handleSaveCanvas}
+                onClick={handleSaveCanvas}
               >
                 <Save className="mr-2 h-4 w-4" /> Save
               </DropdownMenu.Item>

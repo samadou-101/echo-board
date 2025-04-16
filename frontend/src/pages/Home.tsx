@@ -211,7 +211,7 @@ const Home: React.FC = () => {
           })}
       </div>
 
-      <NavBar setSidebarOpen={setSidebarOpen} />
+      <NavBar canvas={canvas} setSidebarOpen={setSidebarOpen} />
       <OptionsPanel />
       <div className="flex min-h-screen flex-1 flex-col pt-16 md:flex-row">
         <SideBar
