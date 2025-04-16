@@ -1,16 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useAppSelector } from "@hooks/redux/redux-hooks";
 import { Canvas } from "fabric";
-import { useEffect, useRef, useState } from "react";
-import socket from "@services/socket/socket";
+import { useEffect } from "react";
 interface InitCanvasArgs {
   setIsCanvasReady: React.Dispatch<React.SetStateAction<boolean>>;
-  // containerRef: React.RefObject<HTMLDivElement | null>;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   setCanvas: React.Dispatch<React.SetStateAction<Canvas | null>>;
-  // resizeObserverRef: React.RefObject<ResizeObserver | null>;
-  // roomId: string | null;
-  // isReceivingUpdate: React.MutableRefObject<boolean>;
 }
 export const useInitCanvas = ({
   setIsCanvasReady,
@@ -43,8 +37,8 @@ export const useInitCanvas = ({
 
         const handleResize = () => {
           const { width, height } = container.getBoundingClientRect();
-          initCanvas.setWidth(width);
-          initCanvas.setHeight(height);
+          initCanvas.width = width;
+          initCanvas.height = height;
           initCanvas.renderAll();
         };
 

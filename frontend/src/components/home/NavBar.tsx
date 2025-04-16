@@ -18,9 +18,12 @@ import Login from "./Login";
 import Signup from "./Signup";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@config/firebase";
+// import { Canvas } from "fabric";
+// import { saveCanvas } from "@services/canvas/saveCanvas";
 
 interface NavBarProps {
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  // canvas: Canvas | null; // Add canvas prop
 }
 
 export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
@@ -31,6 +34,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
       setIsLoggedIn(true);
     } else setIsLoggedIn(false);
   });
+
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
@@ -49,6 +53,15 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
       });
     setIsLoggedIn(false);
   };
+
+  // const handleSaveCanvas = async () => {
+  //   try {
+  //     await saveCanvas(canvas, "Canvas Drawing");
+  //     console.log("Canvas saved successfully");
+  //   } catch (error) {
+  //     console.error("Failed to save canvas:", error);
+  //   }
+  // };
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center border-b border-gray-200 bg-white/80 px-4 shadow-sm backdrop-blur-md sm:px-6 dark:border-gray-800 dark:bg-gray-900/80">
@@ -78,7 +91,10 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
               <DropdownMenu.Item className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
                 <Plus className="mr-2 h-4 w-4" /> New Board
               </DropdownMenu.Item>
-              <DropdownMenu.Item className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
+              <DropdownMenu.Item
+                className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                // onClick={handleSaveCanvas}
+              >
                 <Save className="mr-2 h-4 w-4" /> Save
               </DropdownMenu.Item>
               <DropdownMenu.Separator className="my-1 h-px bg-gray-200 dark:bg-gray-800" />
@@ -137,13 +153,6 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
         <div className="flex-1" />
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {/* <Button
-            variant="outline"
-            size="sm"
-            className="hidden items-center sm:flex"
-          >
-            <Share2 className="mr-2 h-4 w-4" /> Share
-          </Button> */}
           <div className="relative hidden sm:block">
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
@@ -152,7 +161,6 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
               className="h-10 w-40 pl-10 shadow-sm md:w-72"
             />
           </div>
-
           {isLoggedIn ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>

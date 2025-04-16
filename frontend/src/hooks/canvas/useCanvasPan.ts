@@ -1,20 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect } from "react";
-import type { Canvas } from "fabric";
+import { useEffect, useRef } from "react";
+import { Canvas } from "fabric";
 
-interface UseCanvasPanArgs {
-  canvas: Canvas | null;
-  mode: string;
-  lastPosX: React.RefObject<number>;
-  lastPosY: React.RefObject<number>;
-}
+export const useCanvasPan = (canvas: Canvas | null, mode: string) => {
+  const lastPosX = useRef<number>(0);
+  const lastPosY = useRef<number>(0);
 
-export const useCanvasPan = ({
-  canvas,
-  mode,
-  lastPosX,
-  lastPosY,
-}: UseCanvasPanArgs) => {
   useEffect(() => {
     if (!canvas) return;
 
@@ -28,19 +19,14 @@ export const useCanvasPan = ({
 
     const handlePanMouseMove = (e: any) => {
       if (mode !== "pan" || !lastPosX.current || !lastPosY.current) return;
-
       const vpt = canvas.viewportTransform;
       if (!vpt) return;
-
       const deltaX = e.e.clientX - lastPosX.current;
       const deltaY = e.e.clientY - lastPosY.current;
-
       vpt[4] += deltaX;
       vpt[5] += deltaY;
-
       canvas.setViewportTransform(vpt);
       canvas.requestRenderAll();
-
       lastPosX.current = e.e.clientX;
       lastPosY.current = e.e.clientY;
     };

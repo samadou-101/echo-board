@@ -1,4 +1,4 @@
-// @pages/Home.tsx
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { NavBar } from "@components/home/NavBar";
 import { SideBar } from "@components/home/SideBar";
@@ -16,6 +16,15 @@ import { setRoomId } from "@redux/slices/globalSlice";
 import { useAppDispatch } from "@hooks/redux/redux-hooks";
 import Chat from "@components/home/Chat";
 import OptionsPanel from "@components/home/OptionsPanel";
+import { Canvas } from "fabric";
+import {
+  CanvasMode,
+  handleModeChange,
+  handleTabChange,
+  handleClearCanvas,
+  handleLineWidthChange,
+  handleColorChange,
+} from "@utils/canvas/canvasUtils";
 
 const getUserColor = (userId: string) => {
   const hash = userId
@@ -29,6 +38,10 @@ const Home: React.FC = () => {
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
   const [roomName, setRoomName] = useState("");
   const [users, setUsers] = useState<string[]>([]);
+  const [canvas, setCanvas] = useState<Canvas | null>(null);
+  const [mode, setMode] = useState<CanvasMode>("select");
+  const [lineWidth, setLineWidth] = useState<number>(2);
+  const [color, setColor] = useState<string>("#000000");
 
   const userId = useSocketConnection();
   const cursors = useCursorTracking();
@@ -210,7 +223,20 @@ const Home: React.FC = () => {
           joinRoom={handleJoinRoom}
           users={users}
         />
-        <CanvasArea />
+        <CanvasArea
+          setCanvas={setCanvas}
+          mode={mode}
+          setMode={setMode}
+          lineWidth={lineWidth}
+          setLineWidth={setLineWidth}
+          color={color}
+          setColor={setColor}
+          handleModeChange={handleModeChange}
+          handleTabChange={handleTabChange}
+          handleClearCanvas={handleClearCanvas}
+          handleLineWidthChange={handleLineWidthChange}
+          handleColorChange={handleColorChange}
+        />
         <Chat userId={userId!} roomId={currentRoom} />
       </div>
     </div>
