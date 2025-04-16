@@ -16,6 +16,7 @@
   "dependencies": {
     "backend": "file:",
     "express": "^4.21.2",
+    "mongoose": "^8.13.2",
     "socket.io": "^4.8.1",
     "tsc-alias": "^1.8.13",
     "tsx": "^4.19.3",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
+    "@types/mongoose": "^5.11.96",
     "@types/socket.io": "^3.0.1"
   }
 }

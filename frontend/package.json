@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.0.15",
     "@types/fabric": "^5.3.10",
     "@types/firebase": "^2.4.32",
+    "axios": "^1.8.4",
     "fabric": "^6.6.2",
     "firebase": "^11.6.0",
     "frontend": "file:",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/axios": "^0.9.36",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",

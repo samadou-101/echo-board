@@ -11,7 +11,7 @@ import socket from "@services/socket/socket";
 import { useInitCanvas } from "@hooks/canvas/useInitCanvas";
 import { useCanvasMode } from "@hooks/canvas/useCanvasMode";
 import { useCanvasSync } from "@hooks/canvas/useCanvasSync";
-import { Hand, Maximize, MousePointer2 } from "lucide-react";
+import { Hand, MousePointer2 } from "lucide-react";
 
 export default function CanvasArea() {
   const [mode, setMode] = useState<
