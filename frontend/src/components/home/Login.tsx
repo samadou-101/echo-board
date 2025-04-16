@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Mail, Lock, X } from "lucide-react";
+import { auth } from "@config/firebase";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Inputs";
 
@@ -9,6 +11,19 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      onLogin(); // Call onLogin callback on success
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
@@ -39,7 +54,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="space-y-6">
-            <Button className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-3 text-gray-900 transition-colors duration-200 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+            <Button
+              onClick={handleGoogleLogin}
+              className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-gray-50 py-3 text-gray-900 transition-colors duration-200 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            >
               <svg className="h-6 w-6" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -59,10 +77,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 />
                 <path d="M1 1h22v22H1z" fill="none" />
               </svg>
-              <span className="text-gray-900 dark:text-gray-300">
+              <span className="text-gray-900 dark:text-gray-100">
                 Login with Google
               </span>
             </Button>
+
+            {error && (
+              <div className="text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
 
             <div className="my-4 flex items-center justify-between">
               <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>

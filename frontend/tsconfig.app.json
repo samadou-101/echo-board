@@ -27,6 +27,7 @@
       "@utils/*": ["src/utils/*"],
       "@pages/*": ["src/pages/*"],
       "@redux/*": ["src/redux/*"],
+      "@config/*": ["src/config/*"],
       "@hooks/*": ["src/hooks/*"],
       "@schema/*": ["src/schema/*"],
       "@services/*": ["src/services/*"],

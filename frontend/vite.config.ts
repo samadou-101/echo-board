@@ -13,6 +13,7 @@ export default defineConfig({
       "@redux": "/src/redux",
       "@hooks": "/src/hooks",
       "@schema": "/src/schema",
+      "@config": "/src/config",
       "@services": "/src/services",
       "@lib": "/src/lib",
       "@assets": "/src/assets",

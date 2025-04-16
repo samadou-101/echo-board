@@ -3,13 +3,13 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   User,
   Settings,
-  LogOut,
   Plus,
   Save,
   ChevronDown,
   Search,
   PanelLeft,
   Layers,
+  LogOut,
   // Share2,
 } from "lucide-react";
 import Button from "@components/ui/Button";
@@ -17,6 +17,8 @@ import ThemeToggle from "@components/ui/ThemeToggle";
 import Input from "@components/ui/Inputs";
 import Login from "./Login";
 import Signup from "./Signup";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "@config/firebase";
 
 interface NavBarProps {
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -25,6 +27,11 @@ interface NavBarProps {
 export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setIsLoggedIn(true);
+    } else setIsLoggedIn(false);
+  });
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
@@ -34,6 +41,13 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
   };
 
   const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        console.log("User signed out");
+      })
+      .catch((error) => {
+        console.error("Error signing out:", error);
+      });
     setIsLoggedIn(false);
   };
 
