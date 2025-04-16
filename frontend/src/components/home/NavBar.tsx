@@ -10,7 +10,7 @@ import {
   Search,
   PanelLeft,
   Layers,
-  Share2,
+  // Share2,
 } from "lucide-react";
 import Button from "@components/ui/Button";
 import ThemeToggle from "@components/ui/ThemeToggle";
@@ -124,13 +124,13 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen }) => {
         <div className="flex-1" />
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             className="hidden items-center sm:flex"
           >
             <Share2 className="mr-2 h-4 w-4" /> Share
-          </Button>
+          </Button> */}
           <div className="relative hidden sm:block">
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input

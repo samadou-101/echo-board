@@ -59,7 +59,9 @@ const Signup: React.FC<SignupProps> = ({ onSignup }) => {
                 />
                 <path d="M1 1h22v22H1z" fill="none" />
               </svg>
-              Sign up with Google
+              <span className="text-gray-900 dark:text-gray-300">
+                Signup with Google
+              </span>
             </Button>
 
             <div className="my-4 flex items-center justify-between">
