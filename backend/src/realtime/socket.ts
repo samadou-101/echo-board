@@ -8,6 +8,7 @@ import {
   handleDisconnect,
 } from "./events/room";
 import { handleCursorMove } from "./events/cursor";
+import { setupChatHandlers } from "./events/chat";
 
 export const setupSocket = (server: HttpServer) => {
   const io = new Server(server, {
@@ -117,11 +118,11 @@ export const setupSocket = (server: HttpServer) => {
         socket.to(roomId).emit("canvas:clear", { roomId });
       }
     });
+    setupChatHandlers(socket, io);
+
     socket.on("disconnect", () => {
       console.log(`User Disconnected: ${socket.id}`);
       handleDisconnect(socket, io);
     });
   });
-
-  return io;
 };

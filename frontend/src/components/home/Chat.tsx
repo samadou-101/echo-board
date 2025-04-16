@@ -69,6 +69,11 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
         message: message.trim(),
         timestamp: Date.now(),
       };
+
+      // Add message to local state immediately
+      setMessages((prev) => [...prev, chatMessage]);
+
+      // Then emit to server
       socket.emit("chat-message", { roomId, message: chatMessage });
       setMessage("");
 
@@ -100,6 +105,20 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
       }, 2000);
     }
   };
+
+  // Add a placeholder message if no messages exist
+  useEffect(() => {
+    if (roomId && messages.length === 0) {
+      // Add a welcome message if there are no messages
+      setMessages([
+        {
+          userId: "system",
+          message: "Welcome to the chat! Send your first message.",
+          timestamp: Date.now(),
+        },
+      ]);
+    }
+  }, [roomId, messages.length]);
 
   // Group messages by date
   const groupedMessages = messages.reduce(
@@ -148,62 +167,84 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
           {/* Message list */}
           <div className="flex-1 overflow-y-auto p-4">
             {roomId ? (
-              Object.keys(groupedMessages).map((date) => (
-                <div key={date} className="mb-6">
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-blue-50 px-2 text-xs text-gray-500 dark:bg-indigo-950 dark:text-gray-400">
-                        {new Date(date).toLocaleDateString(undefined, {
-                          weekday: "long",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-
-                  {groupedMessages[date].map((msg, index) => (
-                    <div
-                      key={`${date}-${index}`}
-                      className={`flex ${msg.userId === userId ? "justify-end" : "justify-start"} mb-4`}
-                    >
-                      {msg.userId !== userId && (
-                        <div className="mr-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                          {msg.userId.slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 shadow ${
-                          msg.userId === userId
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100"
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">
-                          {msg.message}
-                        </p>
-                        <span
-                          className={`block text-right text-xs ${
-                            msg.userId === userId
-                              ? "text-blue-200"
-                              : "text-gray-500 dark:text-gray-400"
-                          }`}
-                        >
-                          {formatTime(msg.timestamp)}
+              Object.keys(groupedMessages).length > 0 ? (
+                Object.keys(groupedMessages).map((date) => (
+                  <div key={date} className="mb-6">
+                    <div className="relative mb-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="bg-blue-50 px-2 text-xs text-gray-500 dark:bg-indigo-950 dark:text-gray-400">
+                          {new Date(date).toLocaleDateString(undefined, {
+                            weekday: "long",
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </span>
                       </div>
-                      {msg.userId === userId && (
-                        <div className="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
-                          YOU
-                        </div>
-                      )}
                     </div>
-                  ))}
+
+                    {groupedMessages[date].map((msg, index) => (
+                      <div
+                        key={`${date}-${index}`}
+                        className={`flex ${
+                          msg.userId === "system"
+                            ? "justify-center"
+                            : msg.userId === userId && index !== 0
+                              ? "justify-end"
+                              : "justify-start"
+                        } mb-4`}
+                      >
+                        {(msg.userId !== userId || index === 0) &&
+                          msg.userId !== "system" && (
+                            <div className="mr-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                              {msg.userId.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-4 py-2 shadow ${
+                            msg.userId === "system"
+                              ? "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                              : msg.userId === userId && index !== 0
+                                ? "bg-blue-600 text-white"
+                                : "bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100"
+                          }`}
+                        >
+                          <p className="overflow-hidden text-sm break-words whitespace-pre-wrap">
+                            {msg.message}
+                          </p>
+                          {msg.userId !== "system" && (
+                            <span
+                              className={`block text-right text-xs ${
+                                msg.userId === userId && index !== 0
+                                  ? "text-blue-200"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {formatTime(msg.timestamp)}
+                            </span>
+                          )}
+                        </div>
+                        {msg.userId === userId && index !== 0 && (
+                          <div className="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
+                            YOU
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    <p>No messages yet</p>
+                    <p className="mt-2 text-xs">
+                      Send your first message below
+                    </p>
+                  </div>
                 </div>
-              ))
+              )
             ) : (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center text-gray-500 dark:text-gray-400">
