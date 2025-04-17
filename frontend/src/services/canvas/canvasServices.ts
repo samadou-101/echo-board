@@ -213,3 +213,32 @@ export const deleteCanvas = async (
     return { error: "Failed to delete canvas" };
   }
 };
+
+export const loadCanvasToEditor = async (
+  canvasId: string,
+  canvasInstance: Canvas | null,
+  setCanvas: (canvas: Canvas | null) => void,
+): Promise<void> => {
+  if (!canvasInstance || !canvasId) {
+    console.error("Canvas instance or ID missing");
+    return;
+  }
+
+  try {
+    const response: CanvasResponse = await loadCanvas(canvasId);
+    if ("error" in response && response.error) {
+      throw new Error(response.error);
+    }
+
+    if (response.canvas) {
+      canvasInstance.loadFromJSON(JSON.parse(response.canvas), () => {
+        canvasInstance.renderAll();
+        setCanvas(canvasInstance);
+      });
+      console.log(`Canvas "${response.projectName}" loaded successfully`);
+    }
+  } catch (error) {
+    console.error("Failed to load canvas:", error);
+    alert("Failed to load canvas");
+  }
+};

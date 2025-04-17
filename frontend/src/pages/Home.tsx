@@ -25,6 +25,7 @@ import {
   handleLineWidthChange,
   handleColorChange,
 } from "@utils/canvas/canvasUtils";
+import { loadCanvasToEditor } from "@services/canvas/canvasServices";
 
 const getUserColor = (userId: string) => {
   const hash = userId
@@ -137,6 +138,14 @@ const Home: React.FC = () => {
       }
     });
   };
+  useEffect(() => {
+    setTimeout(() => {
+      const testCanvasId = "wLK5V7mfWcNzfYCXnKWLsgKTDDg2_bew";
+      if (canvas) {
+        loadCanvasToEditor(testCanvasId, canvas, setCanvas);
+      }
+    }, 3000);
+  }, [canvas]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-50 text-gray-900 transition-colors duration-200 dark:bg-gray-950 dark:text-gray-100">
