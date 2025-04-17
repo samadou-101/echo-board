@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
 import * as Separator from "@radix-ui/react-separator";
-import { Plus, Share, Trash2 } from "lucide-react";
+import { Plus, Share, Trash2, Save } from "lucide-react";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Inputs";
 import * as Tabs from "@radix-ui/react-tabs";
 import { useAppSelector } from "@hooks/redux/redux-hooks";
 import { Canvas } from "fabric";
-import { loadCanvasToEditor } from "@services/canvas/canvasServices";
+import {
+  loadCanvasToEditor,
+  updateCanvas,
+} from "@services/canvas/canvasServices";
 
 interface Project {
   projectName: string;
   canvasId: string;
+}
+
+interface CanvasResponse {
+  canvasId?: string;
+  error?: string;
 }
 
 interface SideBarProps {
@@ -75,6 +83,25 @@ export const SideBar: React.FC<SideBarProps> = ({
       }, 300);
     } catch (error) {
       console.error("Failed to load canvas:", error);
+    }
+  };
+
+  const handleSaveProject = async (project: Project) => {
+    if (!canvas) {
+      console.error("Canvas is not initialized");
+      return;
+    }
+    try {
+      const response: CanvasResponse = await updateCanvas(
+        canvas,
+        project.canvasId,
+      );
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      console.log(`Project "${project.projectName}" updated successfully`);
+    } catch (error) {
+      console.error("Failed to update project:", error);
     }
   };
 
@@ -157,20 +184,32 @@ export const SideBar: React.FC<SideBarProps> = ({
           {projects.map((project, index) => (
             <div
               key={index}
-              className="flex cursor-pointer items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-              onClick={() => handleLoadProject(project.canvasId)}
+              className="flex items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
-              <p className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200">
+              <p
+                className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200"
+                onClick={() => handleLoadProject(project.canvasId)}
+              >
                 {project.projectName}
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-500"
-                onClick={() => handleDeleteProject(project.canvasId)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-500"
+                  onClick={() => handleSaveProject(project)}
+                >
+                  <Save className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-500"
+                  onClick={() => handleDeleteProject(project.canvasId)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
