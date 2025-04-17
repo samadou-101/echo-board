@@ -19,6 +19,8 @@ import Signup from "./Signup";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@config/firebase";
 import { Canvas } from "fabric";
+import { saveCanvas } from "@services/canvas/canvasServices";
+import { CanvasResponse } from "@services/canvas/canvasServices";
 
 interface NavBarProps {
   canvas: Canvas | null;
@@ -66,27 +68,21 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
     setIsSaveModalOpen(true);
   };
 
+  // Inside NavBar component
   const handleConfirmSave = async () => {
     if (!projectName.trim()) {
       alert("Project name is required");
       return;
     }
+
     try {
-      // Serialize canvas to JSON
-      const json = JSON.stringify(
-        canvas!.toJSON(["id", "selectable", "evented"]),
-      );
-      // Send to server with project name
-      const response = await fetch("/api/save-canvas", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ canvas: json, projectName }),
-      });
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
+      // Explicitly type `response` as `CanvasResponse`
+      const response: CanvasResponse = await saveCanvas(canvas!, projectName);
+
+      if (response.error) {
+        throw new Error(response.error);
       }
+
       console.log(`Canvas saved successfully as "${projectName}"`);
       setIsSaveModalOpen(false);
       setProjectName("");
