@@ -223,18 +223,48 @@ export const loadCanvasToEditor = async (
     console.error("Canvas instance or ID missing");
     return;
   }
-
   try {
     const response: CanvasResponse = await loadCanvas(canvasId);
     if ("error" in response && response.error) {
       throw new Error(response.error);
     }
-
     if (response.canvas) {
+      canvasInstance.clear(); // Clear existing content
+
       canvasInstance.loadFromJSON(JSON.parse(response.canvas), () => {
+        // Ensure canvas dimensions and viewport are updated
+        canvasInstance.setDimensions({
+          width: canvasInstance.getWidth(),
+          height: canvasInstance.getHeight(),
+        });
+
+        // Force canvas to recalculate object positions and boundaries
+        canvasInstance.calcViewportBoundaries();
+
+        // Make sure all objects are visible within the viewport
+        canvasInstance.forEachObject((obj) => {
+          obj.setCoords();
+        });
+
+        // Force immediate render
         canvasInstance.renderAll();
+
+        // Update state
         setCanvas(canvasInstance);
+
+        // Additional render after a slight delay to ensure everything is visible
+        setTimeout(() => {
+          canvasInstance.requestRenderAll();
+          // Trigger window resize to refresh canvas layout
+          window.dispatchEvent(new Event("resize"));
+
+          // Force another render after the resize event
+          setTimeout(() => {
+            canvasInstance.requestRenderAll();
+          }, 50);
+        }, 50);
       });
+
       console.log(`Canvas "${response.projectName}" loaded successfully`);
     }
   } catch (error) {

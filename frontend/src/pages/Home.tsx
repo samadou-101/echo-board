@@ -144,7 +144,7 @@ const Home: React.FC = () => {
       if (canvas) {
         loadCanvasToEditor(testCanvasId, canvas, setCanvas);
       }
-    }, 3000);
+    }, 300);
   }, [canvas]);
 
   return (
