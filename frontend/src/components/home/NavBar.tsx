@@ -21,6 +21,8 @@ import { auth } from "@config/firebase";
 import { Canvas } from "fabric";
 import { saveCanvas } from "@services/canvas/canvasServices";
 import { CanvasResponse } from "@services/canvas/canvasServices";
+import { useAppDispatch } from "@hooks/redux/redux-hooks";
+import { setIsProjectAdded } from "@redux/slices/globalSlice";
 
 interface NavBarProps {
   canvas: Canvas | null;
@@ -31,6 +33,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const dispatch = useAppDispatch();
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -88,6 +91,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
           canvasId: response.canvasId,
         };
         localStorage.setItem("projectData", JSON.stringify(projectData));
+        dispatch(setIsProjectAdded());
       }
       // Save to localStorage
 

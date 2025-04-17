@@ -4,6 +4,9 @@ import { Plus, Share, Trash2 } from "lucide-react";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Inputs";
 import * as Tabs from "@radix-ui/react-tabs";
+import { useAppSelector } from "@hooks/redux/redux-hooks";
+import { Canvas } from "fabric";
+import { loadCanvasToEditor } from "@services/canvas/canvasServices";
 
 interface Project {
   projectName: string;
@@ -18,9 +21,13 @@ interface SideBarProps {
   createRoom: () => void;
   joinRoom: () => void;
   users: string[];
+  canvas: Canvas | null;
+  setCanvas: (canvas: Canvas | null) => void;
 }
 
 export const SideBar: React.FC<SideBarProps> = ({
+  canvas,
+  setCanvas,
   sidebarOpen,
   currentRoom,
   roomName,
@@ -31,6 +38,7 @@ export const SideBar: React.FC<SideBarProps> = ({
 }) => {
   const [isJoiningRoom, setIsJoiningRoom] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
+  const isProjectAdded = useAppSelector((state) => state.global.isProjectAdded);
 
   useEffect(() => {
     // Load projects from localStorage
@@ -38,19 +46,35 @@ export const SideBar: React.FC<SideBarProps> = ({
     if (projectData) {
       setProjects([JSON.parse(projectData)]);
     }
-  }, []);
+  }, [isProjectAdded]);
 
   const handleDeleteProject = (canvasId: string) => {
-    // Filter out the project to delete
     const updatedProjects = projects.filter(
       (project) => project.canvasId !== canvasId,
     );
     setProjects(updatedProjects);
-    // Update localStorage
     if (updatedProjects.length > 0) {
       localStorage.setItem("projectData", JSON.stringify(updatedProjects[0]));
     } else {
       localStorage.removeItem("projectData");
+    }
+  };
+
+  const handleLoadProject = (canvasId: string) => {
+    console.log("Attempting to load canvas with ID:", canvasId);
+    if (!canvas) {
+      console.error("Canvas is not initialized");
+      return;
+    }
+    try {
+      setTimeout(() => {
+        console.log("Calling loadCanvasToEditor with canvasId:", canvasId);
+        loadCanvasToEditor(canvasId, canvas, setCanvas);
+        canvas.renderAll();
+        console.log("Canvas loaded and rendered");
+      }, 300);
+    } catch (error) {
+      console.error("Failed to load canvas:", error);
     }
   };
 
@@ -133,9 +157,10 @@ export const SideBar: React.FC<SideBarProps> = ({
           {projects.map((project, index) => (
             <div
               key={index}
-              className="flex items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="flex cursor-pointer items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+              onClick={() => handleLoadProject(project.canvasId)}
             >
-              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+              <p className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200">
                 {project.projectName}
               </p>
               <Button

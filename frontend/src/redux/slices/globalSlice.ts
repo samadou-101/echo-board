@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface GlobalState {
   roomId: string | null;
   isChatOpen: boolean;
+  isProjectAdded: boolean;
 }
 
 const initialState: GlobalState = {
   roomId: null,
   isChatOpen: false,
+  isProjectAdded: false,
 };
 
 export const globalSlice = createSlice({
@@ -23,8 +25,12 @@ export const globalSlice = createSlice({
     setIsChatOpen: (state, action: PayloadAction<boolean>) => {
       state.isChatOpen = action.payload;
     },
+    setIsProjectAdded: (state) => {
+      state.isProjectAdded = !state.isProjectAdded;
+    },
   },
 });
 
-export const { setRoomId, clearRoomId, setIsChatOpen } = globalSlice.actions;
+export const { setRoomId, clearRoomId, setIsChatOpen, setIsProjectAdded } =
+  globalSlice.actions;
 export default globalSlice.reducer;

@@ -138,7 +138,7 @@ const Home: React.FC = () => {
       }
     });
   };
-  // useEffect(() => {
+
   //   setTimeout(() => {
   //     const testCanvasId = "wLK5V7mfWcNzfYCXnKWLsgKTDDg2_bew";
   //     if (canvas) {
@@ -224,6 +224,8 @@ const Home: React.FC = () => {
       <OptionsPanel />
       <div className="flex min-h-screen flex-1 flex-col pt-16 md:flex-row">
         <SideBar
+          setCanvas={setCanvas}
+          canvas={canvas}
           sidebarOpen={sidebarOpen}
           currentRoom={currentRoom}
           roomName={roomName}
