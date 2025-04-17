@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as Separator from "@radix-ui/react-separator";
-import { Plus, Settings, Share } from "lucide-react";
+import { Plus, Share, Trash2 } from "lucide-react";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Inputs";
 import * as Tabs from "@radix-ui/react-tabs";
+
+interface Project {
+  projectName: string;
+  canvasId: string;
+}
 
 interface SideBarProps {
   sidebarOpen: boolean;
@@ -25,6 +30,29 @@ export const SideBar: React.FC<SideBarProps> = ({
   users,
 }) => {
   const [isJoiningRoom, setIsJoiningRoom] = useState<boolean>(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    // Load projects from localStorage
+    const projectData = localStorage.getItem("projectData");
+    if (projectData) {
+      setProjects([JSON.parse(projectData)]);
+    }
+  }, []);
+
+  const handleDeleteProject = (canvasId: string) => {
+    // Filter out the project to delete
+    const updatedProjects = projects.filter(
+      (project) => project.canvasId !== canvasId,
+    );
+    setProjects(updatedProjects);
+    // Update localStorage
+    if (updatedProjects.length > 0) {
+      localStorage.setItem("projectData", JSON.stringify(updatedProjects[0]));
+    } else {
+      localStorage.removeItem("projectData");
+    }
+  };
 
   const handleTabChange = (value: string) => {
     setIsJoiningRoom(value === "join");
@@ -101,14 +129,25 @@ export const SideBar: React.FC<SideBarProps> = ({
           </h2>
         </div>
         <Separator.Root className="mt-2 h-px bg-gray-200 dark:bg-gray-800" />
-        <div className="mt-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex w-full items-center justify-center shadow-sm"
-          >
-            <Settings className="mr-2 h-4 w-4" /> Preferences
-          </Button>
+        <div className="mt-2 space-y-2">
+          {projects.map((project, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+            >
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                {project.projectName}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-500"
+                onClick={() => handleDeleteProject(project.canvasId)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
     </aside>

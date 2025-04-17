@@ -76,12 +76,20 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
     }
 
     try {
-      // Explicitly type `response` as `CanvasResponse`
       const response: CanvasResponse = await saveCanvas(canvas!, projectName);
 
       if (response.error) {
         throw new Error(response.error);
       }
+
+      if (response.canvasId) {
+        const projectData = {
+          projectName,
+          canvasId: response.canvasId,
+        };
+        localStorage.setItem("projectData", JSON.stringify(projectData));
+      }
+      // Save to localStorage
 
       console.log(`Canvas saved successfully as "${projectName}"`);
       setIsSaveModalOpen(false);
@@ -91,7 +99,6 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
       alert("Failed to save canvas");
     }
   };
-
   const handleCancelSave = () => {
     setIsSaveModalOpen(false);
     setProjectName("");
