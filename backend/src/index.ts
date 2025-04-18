@@ -2,6 +2,8 @@ import express from "express";
 import { createServer } from "http";
 import { setupSocket } from "realtime/socket";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 
 import { db } from "@config/firebaseAdmin";
 import canvasRoute from "@routes/api/canvasRoute";
