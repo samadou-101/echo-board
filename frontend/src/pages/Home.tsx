@@ -88,6 +88,7 @@ const Home: React.FC = () => {
     if (hasChanges) {
       setUserPresence(updatedPresence);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursors]);
 
   useEffect(() => {

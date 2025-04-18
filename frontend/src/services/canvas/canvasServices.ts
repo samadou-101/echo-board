@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Canvas } from "fabric";
 import { auth } from "@config/firebase";
 
-interface CanvasData {
-  canvas: string;
-  projectName: string;
-}
+// interface CanvasData {
+//   canvas: string;
+//   projectName: string;
+// }
 
 export interface CanvasResponse {
   canvasId?: string;
