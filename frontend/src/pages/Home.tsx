@@ -25,7 +25,6 @@ import {
   handleLineWidthChange,
   handleColorChange,
 } from "@utils/canvas/canvasUtils";
-import { loadCanvasToEditor } from "@services/canvas/canvasServices";
 
 const getUserColor = (userId: string) => {
   const hash = userId

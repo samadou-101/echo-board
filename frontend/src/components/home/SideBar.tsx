@@ -7,6 +7,7 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { useAppSelector } from "@hooks/redux/redux-hooks";
 import { Canvas } from "fabric";
 import {
+  deleteCanvas,
   loadCanvasToEditor,
   updateCanvas,
 } from "@services/canvas/canvasServices";
@@ -56,15 +57,31 @@ export const SideBar: React.FC<SideBarProps> = ({
     }
   }, [isProjectAdded]);
 
-  const handleDeleteProject = (canvasId: string) => {
-    const updatedProjects = projects.filter(
-      (project) => project.canvasId !== canvasId,
-    );
-    setProjects(updatedProjects);
-    if (updatedProjects.length > 0) {
-      localStorage.setItem("projectData", JSON.stringify(updatedProjects[0]));
-    } else {
-      localStorage.removeItem("projectData");
+  const handleDeleteProject = async (canvasId: string) => {
+    try {
+      const response = await deleteCanvas(canvasId);
+      if (response.error) {
+        console.error(response.error);
+        return;
+      }
+
+      const updatedProjects = projects.filter(
+        (project) => project.canvasId !== canvasId,
+      );
+      setProjects(updatedProjects);
+
+      if (updatedProjects.length > 0) {
+        localStorage.setItem("projectData", JSON.stringify(updatedProjects[0]));
+      } else {
+        localStorage.removeItem("projectData");
+      }
+
+      if (canvas) {
+        canvas.clear();
+        canvas.renderAll();
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
     }
   };
 
@@ -111,7 +128,7 @@ export const SideBar: React.FC<SideBarProps> = ({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 min-w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
+      className={`fixed inset-y-0 top-16 left-0 h-[calc(100vh-4rem)] min-w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -184,20 +201,21 @@ export const SideBar: React.FC<SideBarProps> = ({
           {projects.map((project, index) => (
             <div
               key={index}
-              className="flex items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="flex cursor-pointer items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+              onClick={() => handleLoadProject(project.canvasId)}
             >
-              <p
-                className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200"
-                onClick={() => handleLoadProject(project.canvasId)}
-              >
+              <p className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200">
                 {project.projectName}
               </p>
-              <div className="flex space-x-2">
+              <div className="flex">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-500"
-                  onClick={() => handleSaveProject(project)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveProject(project);
+                  }}
                 >
                   <Save className="h-4 w-4" />
                 </Button>
@@ -205,7 +223,10 @@ export const SideBar: React.FC<SideBarProps> = ({
                   variant="ghost"
                   size="sm"
                   className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-500"
-                  onClick={() => handleDeleteProject(project.canvasId)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteProject(project.canvasId);
+                  }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
