@@ -133,7 +133,7 @@ const Chat: React.FC<{ userId: string; roomId: string | null }> = ({
 
   return (
     <div
-      className={`fixed top-16 right-0 h-[calc(100vh-4rem)] transition-all duration-300 ${
+      className={`fixed top-16 right-0 z-90 h-[calc(100vh-4rem)] transition-all duration-300 ${
         isOpen ? "w-96" : "w-0"
       } overflow-hidden bg-white/70 shadow-lg backdrop-blur-md dark:bg-gray-900/70`}
     >
