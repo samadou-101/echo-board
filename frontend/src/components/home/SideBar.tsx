@@ -53,17 +53,28 @@ export const SideBar: React.FC<SideBarProps> = ({
     // Load projects from localStorage
     const projectData = localStorage.getItem("projectData");
     if (projectData) {
-      setProjects([JSON.parse(projectData)]);
-    }
+      const parsedProjects = [JSON.parse(projectData)];
+      setProjects(parsedProjects);
 
-    // Load last opened canvas on page refresh with a 300ms delay
-    const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
-    if (lastLoadedCanvasId && canvas) {
-      console.log("Loading last opened canvas with ID:", lastLoadedCanvasId);
-      setTimeout(() => {
-        loadCanvasToEditor(lastLoadedCanvasId, canvas, setCanvas);
-        canvas.renderAll();
-      }, 300);
+      // Load last opened canvas on page refresh with a 300ms delay
+      const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
+      if (lastLoadedCanvasId && canvas) {
+        console.log("Loading last opened canvas with ID:", lastLoadedCanvasId);
+        setTimeout(() => {
+          loadCanvasToEditor(lastLoadedCanvasId, canvas, setCanvas);
+          canvas.renderAll();
+        }, 300);
+      } else if (parsedProjects.length > 0 && canvas) {
+        // Fallback: Load the first project if lastLoadedCanvas is not set
+        console.log(
+          "Loading first available project:",
+          parsedProjects[0].canvasId,
+        );
+        setTimeout(() => {
+          loadCanvasToEditor(parsedProjects[0].canvasId, canvas, setCanvas);
+          canvas.renderAll();
+        }, 300);
+      }
     }
   }, [isProjectAdded, canvas, setCanvas]);
 
@@ -136,6 +147,10 @@ export const SideBar: React.FC<SideBarProps> = ({
         throw new Error(response.error);
       }
       console.log(`Project "${project.projectName}" updated successfully`);
+      // Update lastLoadedCanvas in localStorage after successful save
+      localStorage.setItem("lastLoadedCanvas", project.canvasId);
+      // Update projectData in localStorage to ensure consistency
+      localStorage.setItem("projectData", JSON.stringify(project));
     } catch (error) {
       console.error("Failed to update project:", error);
     }
