@@ -14,7 +14,15 @@ const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
 // Middleware
 app.use(express_1.default.json());
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: ["http://localhost:5173", "https://echoboard-nine.vercel.app"],
+}));
+setInterval(() => {
+    console.log("keeping the server awake");
+    fetch("https://echo-board-oqis.onrender.com")
+        .then((res) => console.log("Pinged server:", res.status))
+        .catch((err) => console.error("Ping error:", err));
+}, 60000 * 2);
 // Routes
 app.use("/api", canvasRoute_1.default);
 // Setup Socket
