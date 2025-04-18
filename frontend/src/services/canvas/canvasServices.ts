@@ -26,6 +26,10 @@ interface CanvasesResponse {
   error?: string;
 }
 
+const URL = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://echo-board-oqis.onrender.com";
+
 const getUserId = async (): Promise<string | null> => {
   const user = auth.currentUser;
   return user ? user.uid : null;
@@ -48,7 +52,7 @@ export const saveCanvas = async (
     const json = JSON.stringify(canvas.toJSON(["id", "selectable", "evented"]));
     const response = await fetch(
       // "http://localhost:3000/api/save-canvas"
-      "https://echo-board-oqis.onrender.com/api/save-canvas",
+      `${URL}/api/save-canvas`,
       {
         method: "POST",
         headers: {
@@ -91,7 +95,7 @@ export const updateCanvas = async (
     const json = JSON.stringify(canvas.toJSON(["id", "selectable", "evented"]));
     const response = await fetch(
       // `http://localhost:3000/api/update-canvas/${canvasId}`,
-      `https://echo-board-oqis.onrender.com/api/update-canvas/${canvasId}`,
+      `${URL}/api/update-canvas/${canvasId}`,
       {
         method: "PUT",
         headers: {
@@ -130,7 +134,7 @@ export const loadCanvas = async (canvasId: string): Promise<CanvasResponse> => {
 
     const response = await fetch(
       // `http://localhost:3000/api/load-canvas/${canvasId}`,
-      `https://echo-board-oqis.onrender.com/api/load-canvas/${canvasId}`,
+      `${URL}/api/load-canvas/${canvasId}`,
       {
         method: "GET",
         headers: {
@@ -163,7 +167,7 @@ export const listCanvases = async (): Promise<CanvasesResponse> => {
 
     const response = await fetch(
       // "http://localhost:3000/api/list-canvases"
-      "https://echo-board-oqis.onrender.com/api/list-canvases",
+      `${URL}/api/list-canvases`,
       {
         method: "GET",
         headers: {
@@ -200,7 +204,7 @@ export const deleteCanvas = async (
 
     const response = await fetch(
       // `http://localhost:3000/api/delete-canvas/${canvasId}`,
-      `https://echo-board-oqis.onrender.com/api/delete-canvas/${canvasId}`,
+      `${URL}/api/delete-canvas/${canvasId}`,
       {
         method: "DELETE",
         headers: {
