@@ -46,14 +46,18 @@ export const saveCanvas = async (
     }
 
     const json = JSON.stringify(canvas.toJSON(["id", "selectable", "evented"]));
-    const response = await fetch("http://localhost:3000/api/save-canvas", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-id": userId,
+    const response = await fetch(
+      // "http://localhost:3000/api/save-canvas"
+      "https://echo-board-oqis.onrender.com/api/save-canvas",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": userId,
+        },
+        body: JSON.stringify({ canvas: json, projectName }),
       },
-      body: JSON.stringify({ canvas: json, projectName }),
-    });
+    );
 
     const data: CanvasResponse = await response.json();
 
@@ -86,7 +90,8 @@ export const updateCanvas = async (
 
     const json = JSON.stringify(canvas.toJSON(["id", "selectable", "evented"]));
     const response = await fetch(
-      `http://localhost:3000/api/update-canvas/${canvasId}`,
+      // `http://localhost:3000/api/update-canvas/${canvasId}`,
+      `https://echo-board-oqis.onrender.com/api/update-canvas/${canvasId}`,
       {
         method: "PUT",
         headers: {
@@ -124,7 +129,8 @@ export const loadCanvas = async (canvasId: string): Promise<CanvasResponse> => {
     }
 
     const response = await fetch(
-      `http://localhost:3000/api/load-canvas/${canvasId}`,
+      // `http://localhost:3000/api/load-canvas/${canvasId}`,
+      `https://echo-board-oqis.onrender.com/api/load-canvas/${canvasId}`,
       {
         method: "GET",
         headers: {
@@ -155,12 +161,16 @@ export const listCanvases = async (): Promise<CanvasesResponse> => {
       return { canvases: [], error: "User not authenticated" };
     }
 
-    const response = await fetch("http://localhost:3000/api/list-canvases", {
-      method: "GET",
-      headers: {
-        "x-user-id": userId,
+    const response = await fetch(
+      // "http://localhost:3000/api/list-canvases"
+      "https://echo-board-oqis.onrender.com/api/list-canvases",
+      {
+        method: "GET",
+        headers: {
+          "x-user-id": userId,
+        },
       },
-    });
+    );
 
     const data: CanvasesResponse = await response.json();
 
@@ -189,7 +199,8 @@ export const deleteCanvas = async (
     }
 
     const response = await fetch(
-      `http://localhost:3000/api/delete-canvas/${canvasId}`,
+      // `http://localhost:3000/api/delete-canvas/${canvasId}`,
+      `https://echo-board-oqis.onrender.com/api/delete-canvas/${canvasId}`,
       {
         method: "DELETE",
         headers: {

@@ -13,7 +13,11 @@ const server = createServer(app);
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://echoboard-nine.vercel.app"],
+  })
+);
 
 // Routes
 app.use("/api", canvasRoute);

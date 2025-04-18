@@ -4,8 +4,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const http_1 = require("http");
+const socket_1 = require("./realtime/socket");
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const canvasRoute_1 = __importDefault(require("./routes/api/canvasRoute"));
 const app = (0, express_1.default)();
-app.get("/", (req, res) => {
-    res.status(200).send("Hello world");
+const server = (0, http_1.createServer)(app);
+// Middleware
+app.use(express_1.default.json());
+app.use((0, cors_1.default)());
+// Routes
+app.use("/api", canvasRoute_1.default);
+// Setup Socket
+(0, socket_1.setupSocket)(server);
+const PORT = 3000;
+server.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
 });
-app.listen(3000, () => console.log("Server listening on port 3000"));
