@@ -1,5 +1,4 @@
 backend/serviceAccountKey.json
 .env
 
-frontend/src/config/firebase.ts
 
