@@ -18,7 +18,12 @@ app.use(
     origin: ["http://localhost:5173", "https://echoboard-nine.vercel.app"],
   })
 );
-
+setInterval(() => {
+  console.log("keeping the server awake");
+  fetch("https://echo-board-oqis.onrender.com")
+    .then((res) => console.log("Pinged server:", res.status))
+    .catch((err) => console.error("Ping error:", err));
+}, 60000 * 2);
 // Routes
 app.use("/api", canvasRoute);
 
