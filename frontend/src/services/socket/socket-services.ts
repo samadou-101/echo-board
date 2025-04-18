@@ -11,11 +11,12 @@ declare module "fabric" {
   }
 }
 
-const io_url = import.meta.env.DEV
-  ? "http://localhost:3000"
-  : "https://echo-board-oqis.onrender.com";
+// const io_url = import.meta.env.DEV
+//   ? "http://localhost:3000"
+//   : "https://echo-board-oqis.onrender.com";
 // const socket = io("http://localhost:3000");
-const socket = io(io_url);
+// const socket = io(io_url);
+const socket = io("https://echo-board-oqis.onrender.com");
 
 export const emitCanvasChange = (canvas: Canvas, roomId: string) => {
   if (!canvas || !roomId) return;
