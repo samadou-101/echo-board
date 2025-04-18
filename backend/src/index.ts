@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { setupSocket } from "realtime/socket";
 import cors from "cors";
 
-import { db } from "@config/firebaseAdmin"; // centralized firebase import
+import { db } from "@config/firebaseAdmin";
 import canvasRoute from "@routes/api/canvasRoute";
 
 const app = express();
