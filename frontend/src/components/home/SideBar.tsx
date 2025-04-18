@@ -55,7 +55,17 @@ export const SideBar: React.FC<SideBarProps> = ({
     if (projectData) {
       setProjects([JSON.parse(projectData)]);
     }
-  }, [isProjectAdded]);
+
+    // Load last opened canvas on page refresh with a 300ms delay
+    const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
+    if (lastLoadedCanvasId && canvas) {
+      console.log("Loading last opened canvas with ID:", lastLoadedCanvasId);
+      setTimeout(() => {
+        loadCanvasToEditor(lastLoadedCanvasId, canvas, setCanvas);
+        canvas.renderAll();
+      }, 300);
+    }
+  }, [isProjectAdded, canvas, setCanvas]);
 
   const handleDeleteProject = async (canvasId: string) => {
     try {
@@ -76,6 +86,12 @@ export const SideBar: React.FC<SideBarProps> = ({
         localStorage.removeItem("projectData");
       }
 
+      // Clear lastLoadedCanvas if the deleted canvas was the last loaded
+      const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
+      if (lastLoadedCanvasId === canvasId) {
+        localStorage.removeItem("lastLoadedCanvas");
+      }
+
       if (canvas) {
         canvas.clear();
         canvas.renderAll();
@@ -92,6 +108,9 @@ export const SideBar: React.FC<SideBarProps> = ({
       return;
     }
     try {
+      // Save the canvas ID to localStorage as lastLoadedCanvas
+      localStorage.setItem("lastLoadedCanvas", canvasId);
+
       setTimeout(() => {
         console.log("Calling loadCanvasToEditor with canvasId:", canvasId);
         loadCanvasToEditor(canvasId, canvas, setCanvas);
