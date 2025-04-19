@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
 import {
-  ActiveSelection,
+  // ActiveSelection,
   Canvas,
-  FabricObject,
-  FabricObjectProps,
-  ObjectEvents,
-  SerializedObjectProps,
+  // FabricObject,
+  // FabricObjectProps,
+  // ObjectEvents,
+  // SerializedObjectProps,
 } from "fabric";
 
 interface UseCanvasSyncArgs {
@@ -31,9 +31,11 @@ export function useCanvasSync({
   useEffect(() => {
     if (!canvas || !roomId) return;
 
+    console.log("Canvas sync hook initialized for room:", roomId);
+
     // Ensure each object has a unique ID
     const ensureObjectIds = () => {
-      canvas.forEachObject((obj) => {
+      canvas.getObjects().forEach((obj) => {
         if (!obj.id) {
           obj.id = `obj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         }
@@ -46,6 +48,7 @@ export function useCanvasSync({
 
       ensureObjectIds();
       const json = canvas.toJSON(["id"]);
+      console.log("Emitting canvas update for room:", roomId);
       socket.emit("canvas:update", { roomId, json });
     };
 
@@ -135,27 +138,20 @@ export function useCanvasSync({
     // Handle incoming canvas updates
     const handleCanvasUpdate = (data: { json: any }) => {
       if (!data.json) return;
+      console.log("Received canvas update");
 
       isReceivingUpdate.current = true;
 
       try {
         // Save current canvas state that should be preserved
         const currentDrawingMode = canvas.isDrawingMode;
-        const currentSelection = canvas.selection;
         const currentZoom = canvas.getZoom();
         const currentViewport = canvas.viewportTransform;
 
-        // Save the currently selected objects to restore after load
-        const activeObjects = canvas.getActiveObjects();
-        const activeObjectIds = activeObjects.map((obj) => obj.id || "");
-
-        // Check if selection was active before updating
-        const hadActiveSelection = activeObjects.length > 0;
-
+        // Load the JSON into the canvas
         canvas.loadFromJSON(data.json, () => {
           // Restore canvas state
           canvas.isDrawingMode = currentDrawingMode;
-          canvas.selection = currentSelection;
 
           if (currentViewport) {
             canvas.setViewportTransform(currentViewport);
@@ -163,40 +159,22 @@ export function useCanvasSync({
 
           canvas.setZoom(currentZoom);
 
-          // Re-select any previously selected objects by ID
-          if (activeObjectIds.length > 0 && hadActiveSelection) {
-            const objectsToSelect:
-              | FabricObject<
-                  Partial<FabricObjectProps>,
-                  SerializedObjectProps,
-                  ObjectEvents
-                >[]
-              | undefined = [];
-            canvas.forEachObject((obj) => {
-              if (obj.id && activeObjectIds.includes(obj.id)) {
-                objectsToSelect.push(obj);
-              }
-            });
+          // Force a full re-render and update
+          canvas.renderAll();
 
-            if (objectsToSelect.length > 0) {
-              if (objectsToSelect.length === 1) {
-                canvas.setActiveObject(objectsToSelect[0]);
-              } else {
-                // Create active selection with the objects
-                const activeSelection = new ActiveSelection(objectsToSelect, {
-                  canvas,
-                });
-                canvas.setActiveObject(activeSelection);
-              }
-            }
-          }
+          // Important: Force browser to render the canvas
+          // This helps with making sure changes are visible
+          canvas.fire("after:render");
 
-          // Critical: force a full render
-          canvas.requestRenderAll();
+          console.log("Canvas updated successfully");
 
           // Reset the receiving flag after a short delay
           setTimeout(() => {
             isReceivingUpdate.current = false;
+
+            // Add a second renderAll() after the flag is reset
+            // This ensures any queued updates are properly displayed
+            canvas.renderAll();
           }, 50);
         });
       } catch (error) {
@@ -205,36 +183,65 @@ export function useCanvasSync({
       }
     };
 
+    // Request initial canvas state when joining room
+    const requestInitialCanvas = () => {
+      console.log("Requesting initial canvas state for room:", roomId);
+      socket.emit("canvas:request-initial", { roomId });
+    };
+
     // Handle requests for canvas updates from new users
-    const handleUpdateRequest = (data: { roomId: string }) => {
-      if (data.roomId === roomId && !isReceivingUpdate.current) {
+    const handleInitialRequest = (data: { roomId: string; userId: string }) => {
+      if (data.roomId !== roomId) return;
+
+      console.log(
+        "Received request for initial canvas state from user:",
+        data.userId,
+      );
+
+      // Only respond if we have content on the canvas and we're not currently receiving updates
+      if (!isReceivingUpdate.current && canvas.getObjects().length > 0) {
+        console.log("Sending initial canvas state");
         emitCanvasChangeWithIds();
+      } else {
+        console.log("No canvas content to send or currently receiving updates");
       }
     };
 
     // Handle canvas clear operations from other users
     const handleCanvasClear = (data: { roomId: string }) => {
-      if (data.roomId === roomId) {
-        isReceivingUpdate.current = true;
-        canvas.clear();
-        // canvas.backgroundColor = "#e5e7eb";
-        canvas.renderAll();
+      if (data.roomId !== roomId) return;
 
-        setTimeout(() => {
-          isReceivingUpdate.current = false;
-        }, 50);
-      }
+      console.log("Received canvas clear request");
+      isReceivingUpdate.current = true;
+      canvas.clear();
+      canvas.renderAll();
+
+      setTimeout(() => {
+        isReceivingUpdate.current = false;
+      }, 50);
     };
+
+    // Setup periodic rendering to ensure changes are visible
+    const renderInterval = setInterval(() => {
+      if (canvas && !isReceivingUpdate.current) {
+        canvas.renderAll();
+      }
+    }, 1000); // Render every second as a backup
 
     // Set up socket listeners
     socket.off("canvas:update");
     socket.on("canvas:update", handleCanvasUpdate);
 
-    socket.off("canvas:update-request");
-    socket.on("canvas:update-request", handleUpdateRequest);
+    socket.off("canvas:request-initial");
+    socket.on("canvas:request-initial", handleInitialRequest);
 
     socket.off("canvas:clear");
     socket.on("canvas:clear", handleCanvasClear);
+
+    // When joining a room, wait a moment then request the initial canvas state
+    setTimeout(() => {
+      requestInitialCanvas();
+    }, 500); // Small delay to ensure room joining is complete
 
     return () => {
       // Clean up all event listeners
@@ -247,8 +254,10 @@ export function useCanvasSync({
       canvas.off("after:render", handleDrawing);
 
       socket.off("canvas:update");
-      socket.off("canvas:update-request");
+      socket.off("canvas:request-initial");
       socket.off("canvas:clear");
+
+      clearInterval(renderInterval);
 
       if (throttleTimeoutRef.current) {
         clearTimeout(throttleTimeoutRef.current);

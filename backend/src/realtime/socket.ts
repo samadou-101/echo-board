@@ -119,7 +119,38 @@ export const setupSocket = (server: HttpServer) => {
       }
     });
     setupChatHandlers(socket, io);
+    // Add these handlers to your socket connection logic in server/index.ts
 
+    // Add this among your other socket handlers
+    socket.on("canvas:request-initial", (data: { roomId: string }) => {
+      if (!data.roomId) return;
+      console.log(
+        `User ${socket.id} requesting initial canvas for room ${data.roomId}`
+      );
+      // Broadcast to all OTHER users in the room that this user needs the initial canvas state
+      socket.to(data.roomId).emit("canvas:request-initial", {
+        roomId: data.roomId,
+        userId: socket.id,
+      });
+    });
+
+    // Update your existing canvas:update handler to log more information
+    socket.on("canvas:update", (data: { roomId: string; json: any }) => {
+      if (!data.roomId || !data.json) return;
+      console.log(
+        `User ${socket.id} sending canvas update for room ${data.roomId}`
+      );
+      socket.to(data.roomId).emit("canvas:update", { json: data.json });
+      console.log("Broadcasting canvas:update to room", data.roomId);
+    });
+
+    // Update your canvas:clear handler to match this pattern
+    socket.on("canvas:clear", (data: { roomId: string }) => {
+      if (!data.roomId) return;
+      console.log(`User ${socket.id} clearing canvas for room ${data.roomId}`);
+      socket.to(data.roomId).emit("canvas:clear", { roomId: data.roomId });
+      console.log("Broadcasting canvas:clear to room", data.roomId);
+    });
     socket.on("disconnect", () => {
       console.log(`User Disconnected: ${socket.id}`);
       handleDisconnect(socket, io);
