@@ -167,7 +167,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -183,7 +183,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 >
                   Forgot password?
                 </a>
-              </div>
+              </div> */}
               <Button
                 className="w-full rounded-md bg-blue-600 py-3 text-white transition-colors duration-200 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
                 onClick={handleEmailLogin}

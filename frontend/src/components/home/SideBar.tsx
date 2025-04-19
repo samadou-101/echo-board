@@ -8,6 +8,7 @@ import { useAppSelector } from "@hooks/redux/redux-hooks";
 import { Canvas } from "fabric";
 import {
   deleteCanvas,
+  listCanvases,
   loadCanvasToEditor,
   updateCanvas,
 } from "@services/canvas/canvasServices";
@@ -48,35 +49,69 @@ export const SideBar: React.FC<SideBarProps> = ({
   const [isJoiningRoom, setIsJoiningRoom] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const isProjectAdded = useAppSelector((state) => state.global.isProjectAdded);
+  const isLoggedIn = useAppSelector((state) => state.global.isLoggedIn);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
 
   useEffect(() => {
-    // Load projects from localStorage
-    const projectData = localStorage.getItem("projectData");
-    if (projectData) {
-      const parsedProjects = [JSON.parse(projectData)];
-      setProjects(parsedProjects);
-
-      // Load last opened canvas on page refresh with a 300ms delay
-      const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
-      if (lastLoadedCanvasId && canvas) {
-        console.log("Loading last opened canvas with ID:", lastLoadedCanvasId);
-        setTimeout(() => {
-          loadCanvasToEditor(lastLoadedCanvasId, canvas, setCanvas);
-          canvas.renderAll();
-        }, 300);
-      } else if (parsedProjects.length > 0 && canvas) {
-        // Fallback: Load the first project if lastLoadedCanvas is not set
-        console.log(
-          "Loading first available project:",
-          parsedProjects[0].canvasId,
-        );
-        setTimeout(() => {
-          loadCanvasToEditor(parsedProjects[0].canvasId, canvas, setCanvas);
-          canvas.renderAll();
-        }, 300);
-      }
+    if (!isLoggedIn) {
+      console.log("User not logged in, clearing local state");
+      setProjects([]); // Clear local projects state
+      localStorage.removeItem("projects"); // Clear localStorage
+      localStorage.removeItem("lastLoadedCanvas");
+      canvas?.clear();
+      canvas?.renderAll();
+      return;
     }
-  }, [isProjectAdded, canvas, setCanvas]);
+
+    let isCancelled = false;
+
+    // Load projects from server
+    const fetchProjects = async () => {
+      console.log("Fetching projects...");
+      try {
+        const { canvases, error } = await listCanvases();
+        if (isCancelled) return;
+        if (error) {
+          throw new Error(error);
+        }
+        setProjects(canvases);
+
+        if (canvases.length === 0) return;
+
+        const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
+        if (lastLoadedCanvasId && canvas) {
+          console.log(
+            "Loading last opened canvas with ID:",
+            lastLoadedCanvasId,
+          );
+          setTimeout(() => {
+            if (!isCancelled) {
+              loadCanvasToEditor(lastLoadedCanvasId, canvas, setCanvas);
+              canvas.renderAll();
+            }
+          }, 300);
+        } else if (canvases.length > 0 && canvas) {
+          console.log("Loading first available project:", canvases[0].canvasId);
+          setTimeout(() => {
+            if (!isCancelled) {
+              loadCanvasToEditor(canvases[0].canvasId, canvas, setCanvas);
+              canvas.renderAll();
+            }
+          }, 300);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error("Error fetching projects:", error);
+        }
+      }
+    };
+
+    fetchProjects();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [canvas, setCanvas, isLoggedIn, isProjectAdded]);
 
   const handleDeleteProject = async (canvasId: string) => {
     try {
@@ -91,11 +126,8 @@ export const SideBar: React.FC<SideBarProps> = ({
       );
       setProjects(updatedProjects);
 
-      if (updatedProjects.length > 0) {
-        localStorage.setItem("projectData", JSON.stringify(updatedProjects[0]));
-      } else {
-        localStorage.removeItem("projectData");
-      }
+      // Update localStorage with the updated projects array
+      localStorage.setItem("projects", JSON.stringify(updatedProjects));
 
       // Clear lastLoadedCanvas if the deleted canvas was the last loaded
       const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
@@ -149,8 +181,6 @@ export const SideBar: React.FC<SideBarProps> = ({
       console.log(`Project "${project.projectName}" updated successfully`);
       // Update lastLoadedCanvas in localStorage after successful save
       localStorage.setItem("lastLoadedCanvas", project.canvasId);
-      // Update projectData in localStorage to ensure consistency
-      localStorage.setItem("projectData", JSON.stringify(project));
     } catch (error) {
       console.error("Failed to update project:", error);
     }
@@ -160,8 +190,6 @@ export const SideBar: React.FC<SideBarProps> = ({
     setIsJoiningRoom(value === "join");
   };
 
-  const [showPopup, setShowPopup] = useState<boolean>(false);
-
   const handleShareRoom = () => {
     if (currentRoom) {
       navigator.clipboard.writeText(currentRoom);
@@ -169,6 +197,7 @@ export const SideBar: React.FC<SideBarProps> = ({
       setTimeout(() => setShowPopup(false), 2000);
     }
   };
+
   return (
     <aside
       className={`fixed inset-y-0 top-16 left-0 h-[calc(100vh-4rem)] min-w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
@@ -246,42 +275,49 @@ export const SideBar: React.FC<SideBarProps> = ({
           </h2>
         </div>
         <Separator.Root className="mt-2 h-px bg-gray-200 dark:bg-gray-800" />
-        <div className="mt-2 space-y-2">
-          {projects.map((project, index) => (
-            <div
-              key={index}
-              className="flex cursor-pointer items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-              onClick={() => handleLoadProject(project.canvasId)}
-            >
-              <p className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200">
-                {project.projectName}
-              </p>
-              <div className="flex">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-500"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSaveProject(project);
-                  }}
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-500"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteProject(project.canvasId);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+
+        <div className="mt-2 space-y-2 overflow-y-auto">
+          {projects.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              No projects yet. Create one by clicking "Save" in the File menu.
+            </p>
+          ) : (
+            projects.map((project, index) => (
+              <div
+                key={index}
+                className="flex cursor-pointer items-center justify-between rounded-lg bg-gray-100 p-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                onClick={() => handleLoadProject(project.canvasId)}
+              >
+                <p className="cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {project.projectName}
+                </p>
+                <div className="flex">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSaveProject(project);
+                    }}
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProject(project.canvasId);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </aside>

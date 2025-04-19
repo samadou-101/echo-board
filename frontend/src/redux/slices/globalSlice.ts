@@ -4,12 +4,14 @@ interface GlobalState {
   roomId: string | null;
   isChatOpen: boolean;
   isProjectAdded: boolean;
+  isLoggedIn: boolean;
 }
 
 const initialState: GlobalState = {
   roomId: null,
   isChatOpen: false,
   isProjectAdded: false,
+  isLoggedIn: false,
 };
 
 export const globalSlice = createSlice({
@@ -25,12 +27,24 @@ export const globalSlice = createSlice({
     setIsChatOpen: (state, action: PayloadAction<boolean>) => {
       state.isChatOpen = action.payload;
     },
-    setIsProjectAdded: (state) => {
-      state.isProjectAdded = !state.isProjectAdded;
+    setIsProjectAdded: (state, action: PayloadAction<boolean>) => {
+      state.isProjectAdded = action.payload;
+    },
+    setIsLoggedIn: (state, action: PayloadAction<boolean>) => {
+      state.isLoggedIn = action.payload;
+    },
+    resetProjects: (state) => {
+      state.isProjectAdded = false;
     },
   },
 });
 
-export const { setRoomId, clearRoomId, setIsChatOpen, setIsProjectAdded } =
-  globalSlice.actions;
+export const {
+  setRoomId,
+  clearRoomId,
+  setIsChatOpen,
+  setIsProjectAdded,
+  setIsLoggedIn,
+  resetProjects,
+} = globalSlice.actions;
 export default globalSlice.reducer;

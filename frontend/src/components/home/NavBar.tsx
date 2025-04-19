@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
@@ -22,8 +23,12 @@ import { auth } from "@config/firebase";
 import { Canvas } from "fabric";
 import { saveCanvas } from "@services/canvas/canvasServices";
 import { CanvasResponse } from "@services/canvas/canvasServices";
-import { useAppDispatch } from "@hooks/redux/redux-hooks";
-import { setIsProjectAdded } from "@redux/slices/globalSlice";
+import { useAppDispatch, useAppSelector } from "@hooks/redux/redux-hooks";
+import {
+  resetProjects,
+  setIsLoggedIn,
+  setIsProjectAdded,
+} from "@redux/slices/globalSlice";
 
 interface NavBarProps {
   canvas: Canvas | null;
@@ -31,43 +36,57 @@ interface NavBarProps {
 }
 
 export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const dispatch = useAppDispatch();
+  const isLoggedIn = useAppSelector((state) => state.global.isLoggedIn);
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      setIsLoggedIn(true);
+      dispatch(setIsLoggedIn(true));
     } else {
-      setIsLoggedIn(false);
+      dispatch(setIsLoggedIn(false));
     }
   });
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    dispatch(setIsLoggedIn(true));
   };
 
   const handleSignup = () => {
-    setIsLoggedIn(true);
+    dispatch(setIsLoggedIn(true));
   };
-
   const handleLogout = () => {
     signOut(auth)
       .then(() => {
         console.log("User signed out");
+        localStorage.removeItem("projects"); // Clear localStorage first
+        localStorage.removeItem("lastLoadedCanvas");
+        dispatch(resetProjects()); // Clear projects state
+        dispatch(setIsProjectAdded(false)); // Reset project added state
       })
       .catch((error) => {
         console.error("Error signing out:", error);
       });
-    setIsLoggedIn(false);
+    console.log("Dispatching setIsLoggedIn(false)");
+    dispatch(setIsLoggedIn(false)); // Trigger useEffect in SideBar
   };
+  // const handleLogout = () => {
+  //   signOut(auth)
+  //     .then(() => {
+  //       console.log("User signed out");
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error signing out:", error);
+  //     });
+  //   dispatch(setIsLoggedIn(false));
+  // };
 
   const handleSaveCanvas = () => {
     if (!isLoggedIn) {
       setIsLoginModalOpen(true);
-      setIsSaveModalOpen(false); // Ensure save modal is not open
+      setIsSaveModalOpen(false);
       return;
     }
     if (!canvas) {
@@ -91,15 +110,33 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
       }
 
       if (response.canvasId) {
-        const projectData = {
+        const existingProjectsData = localStorage.getItem("projects");
+        const projects = existingProjectsData
+          ? JSON.parse(existingProjectsData)
+          : [];
+
+        const newProject = {
           projectName,
           canvasId: response.canvasId,
         };
-        localStorage.setItem("projectData", JSON.stringify(projectData));
-        dispatch(setIsProjectAdded());
+
+        const existingProjectIndex = projects.findIndex(
+          (project: any) => project.projectName === projectName,
+        );
+
+        if (existingProjectIndex !== -1) {
+          projects[existingProjectIndex] = newProject;
+        } else {
+          projects.push(newProject);
+        }
+        localStorage.setItem("projects", JSON.stringify(projects));
+        localStorage.setItem("lastLoadedCanvas", response.canvasId);
+
+        // dispatch(setIsProjectAdded());
       }
       console.log(`Canvas saved successfully as "${projectName}"`);
       setIsSaveModalOpen(false);
+      dispatch(setIsProjectAdded(true)); // Reset project added state
       setProjectName("");
     } catch (error) {
       console.error("Failed to save canvas:", error);
@@ -110,6 +147,14 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
   const handleCancelSave = () => {
     setIsSaveModalOpen(false);
     setProjectName("");
+  };
+
+  const handleNewBoard = () => {
+    if (canvas) {
+      canvas.clear();
+      canvas.renderAll();
+      localStorage.removeItem("lastLoadedCanvas");
+    }
   };
 
   return (
@@ -138,7 +183,10 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-[200px] rounded-lg border border-gray-200 bg-white/95 p-1.5 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95">
-                <DropdownMenu.Item className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
+                <DropdownMenu.Item
+                  className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={handleNewBoard}
+                >
                   <Plus className="mr-2 h-4 w-4" /> New Board
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
