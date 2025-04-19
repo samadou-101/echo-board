@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
-import type { Canvas } from "fabric";
+import { Canvas, IText } from "fabric";
 import { disableDrawMode, setupDrawMode } from "@utils/canvas/drawMode";
 import { disableEraseMode, setupEraseMode } from "@utils/canvas/eraseMode";
 import { rectangleModeStart } from "@utils/canvas/rectangleMode";
 import { circleModeStart } from "@utils/canvas/circleMode";
 import { triangleModeStart } from "@utils/canvas/triangleMode";
 import { rhombusModeStart } from "@utils/canvas/rhombusMode";
+import { setupTextMode } from "@utils/canvas/textMode";
 
 interface UseCanvasModeArgs {
   canvas: Canvas | null;
@@ -13,6 +15,27 @@ interface UseCanvasModeArgs {
   color: string;
   lineWidth: number;
 }
+
+const disableTextMode = (canvas: Canvas) => {
+  canvas.off("mouse:down");
+  canvas.isDrawingMode = false;
+  canvas.selection = true;
+  canvas.defaultCursor = "default";
+};
+
+const ensureTextOnTop = (canvas: Canvas) => {
+  const objects = canvas.getObjects();
+  const textObjects = objects.filter((obj) => obj instanceof IText);
+  textObjects.forEach((text) => canvas.bringObjectToFront(text));
+};
+
+const setupShapeMode = (
+  canvas: Canvas,
+  shapeStartFn: (canvas: Canvas) => void,
+) => {
+  shapeStartFn(canvas);
+  ensureTextOnTop(canvas);
+};
 
 export const useCanvasMode = ({
   canvas,
@@ -23,34 +46,65 @@ export const useCanvasMode = ({
   useEffect(() => {
     if (!canvas) return;
 
-    // First, clean up any active modes
     disableDrawMode(canvas);
     disableEraseMode(canvas);
+    disableTextMode(canvas);
 
-    // Apply the new mode
-    if (mode === "draw") {
-      setupDrawMode(canvas, color, lineWidth);
-    } else if (mode === "erase") {
-      setupEraseMode(canvas);
-    } else if (mode === "rectangle") {
-      rectangleModeStart(canvas);
-    } else if (mode === "circle") {
-      circleModeStart(canvas);
-    } else if (mode === "triangle") {
-      triangleModeStart(canvas);
-    } else if (mode === "rhombus") {
-      rhombusModeStart(canvas);
-    } else if (mode === "select") {
-      canvas.selection = true;
-      canvas.defaultCursor = "default";
-      canvas.isDrawingMode = false;
-    } else if (mode === "pan") {
-      canvas.selection = false;
-      canvas.defaultCursor = "grab";
-      canvas.isDrawingMode = false;
+    switch (mode) {
+      case "draw":
+        setupDrawMode(canvas, color, lineWidth);
+        ensureTextOnTop(canvas);
+        break;
+      case "erase":
+        setupEraseMode(canvas);
+        ensureTextOnTop(canvas);
+        break;
+      case "rectangle":
+        setupShapeMode(canvas, rectangleModeStart);
+        break;
+      case "circle":
+        setupShapeMode(canvas, circleModeStart);
+        break;
+      case "triangle":
+        setupShapeMode(canvas, triangleModeStart);
+        break;
+      case "rhombus":
+        setupShapeMode(canvas, rhombusModeStart);
+        break;
+      case "text":
+        setupTextMode(canvas);
+        break;
+      case "select":
+        canvas.selection = true;
+        canvas.defaultCursor = "default";
+        canvas.isDrawingMode = false;
+        ensureTextOnTop(canvas);
+        break;
+      case "pan":
+        canvas.selection = false;
+        canvas.defaultCursor = "grab";
+        canvas.isDrawingMode = false;
+        ensureTextOnTop(canvas);
+        break;
+      default:
+        console.warn(`Unknown mode: ${mode}`);
+        canvas.selection = true;
+        canvas.defaultCursor = "default";
+        canvas.isDrawingMode = false;
+        ensureTextOnTop(canvas);
     }
 
-    // Force render to ensure mode change takes effect immediately
     canvas.renderAll();
+
+    // Return cleanup function
+    return () => {
+      disableDrawMode(canvas);
+      disableEraseMode(canvas);
+      disableTextMode(canvas);
+      canvas.isDrawingMode = false;
+      canvas.selection = true;
+      canvas.defaultCursor = "default";
+      canvas.renderAll();
+    };
   }, [mode, canvas, color, lineWidth]);
 };

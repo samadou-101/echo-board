@@ -61,16 +61,16 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
     signOut(auth)
       .then(() => {
         console.log("User signed out");
-        localStorage.removeItem("projects"); // Clear localStorage first
+        localStorage.removeItem("projects");
         localStorage.removeItem("lastLoadedCanvas");
-        dispatch(resetProjects()); // Clear projects state
-        dispatch(setIsProjectAdded(false)); // Reset project added state
+        dispatch(resetProjects());
+        dispatch(setIsProjectAdded(false));
       })
       .catch((error) => {
         console.error("Error signing out:", error);
       });
     console.log("Dispatching setIsLoggedIn(false)");
-    dispatch(setIsLoggedIn(false)); // Trigger useEffect in SideBar
+    dispatch(setIsLoggedIn(false));
   };
   // const handleLogout = () => {
   //   signOut(auth)
@@ -136,7 +136,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
       }
       console.log(`Canvas saved successfully as "${projectName}"`);
       setIsSaveModalOpen(false);
-      dispatch(setIsProjectAdded(true)); // Reset project added state
+      dispatch(setIsProjectAdded(true));
       setProjectName("");
     } catch (error) {
       console.error("Failed to save canvas:", error);

@@ -55,8 +55,8 @@ export const SideBar: React.FC<SideBarProps> = ({
   useEffect(() => {
     if (!isLoggedIn) {
       console.log("User not logged in, clearing local state");
-      setProjects([]); // Clear local projects state
-      localStorage.removeItem("projects"); // Clear localStorage
+      setProjects([]);
+      localStorage.removeItem("projects");
       localStorage.removeItem("lastLoadedCanvas");
       canvas?.clear();
       canvas?.renderAll();
@@ -65,7 +65,6 @@ export const SideBar: React.FC<SideBarProps> = ({
 
     let isCancelled = false;
 
-    // Load projects from server
     const fetchProjects = async () => {
       console.log("Fetching projects...");
       try {
@@ -125,11 +124,7 @@ export const SideBar: React.FC<SideBarProps> = ({
         (project) => project.canvasId !== canvasId,
       );
       setProjects(updatedProjects);
-
-      // Update localStorage with the updated projects array
       localStorage.setItem("projects", JSON.stringify(updatedProjects));
-
-      // Clear lastLoadedCanvas if the deleted canvas was the last loaded
       const lastLoadedCanvasId = localStorage.getItem("lastLoadedCanvas");
       if (lastLoadedCanvasId === canvasId) {
         localStorage.removeItem("lastLoadedCanvas");
@@ -151,7 +146,6 @@ export const SideBar: React.FC<SideBarProps> = ({
       return;
     }
     try {
-      // Save the canvas ID to localStorage as lastLoadedCanvas
       localStorage.setItem("lastLoadedCanvas", canvasId);
 
       setTimeout(() => {
@@ -179,7 +173,6 @@ export const SideBar: React.FC<SideBarProps> = ({
         throw new Error(response.error);
       }
       console.log(`Project "${project.projectName}" updated successfully`);
-      // Update lastLoadedCanvas in localStorage after successful save
       localStorage.setItem("lastLoadedCanvas", project.canvasId);
     } catch (error) {
       console.error("Failed to update project:", error);

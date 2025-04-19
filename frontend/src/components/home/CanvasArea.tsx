@@ -91,6 +91,7 @@ export default function CanvasArea({
     throttleTimeoutRef,
   });
   useCanvasPan(canvas, mode);
+
   return (
     <main className="relative flex h-[calc(100vh-4rem)] flex-1 flex-col pt-24 transition-colors duration-200 dark:bg-gray-900">
       <div className="fixed top-24 left-[55%] z-10 w-[30%] max-w-screen-lg -translate-x-1/2 transform px-4 max-2xl:w-[40%] max-xl:w-[45%] max-lg:left-[65%] max-lg:w-[60%] max-md:left-1/2 max-md:w-[80%]">
@@ -244,6 +245,23 @@ export default function CanvasArea({
             </Button>
           </Tabs.Content>
           <Tabs.Content
+            value="text"
+            className="mt-2 flex flex-wrap justify-center gap-2 rounded-lg border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95"
+          >
+            <Button
+              variant="outline"
+              size="icon"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${
+                mode === "text"
+                  ? "border-blue-500 bg-blue-100 dark:bg-blue-900"
+                  : ""
+              }`}
+              onClick={() => handleModeChange("text", setMode)}
+            >
+              T
+            </Button>
+          </Tabs.Content>
+          <Tabs.Content
             value="draw"
             className="mt-2 flex flex-wrap justify-center gap-2 rounded-lg border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95"
           >
@@ -321,7 +339,9 @@ export default function CanvasArea({
                       ? canvas?.defaultCursor === "grabbing"
                         ? "grabbing"
                         : "grab"
-                      : "pointer",
+                      : mode === "text"
+                        ? "text"
+                        : "pointer",
           }}
         />
       </div>
