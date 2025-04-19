@@ -19,4 +19,7 @@ export default defineConfig({
       "@assets": "/src/assets",
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1000, // Increase the limit from the default 500 KB
+  },
 });
