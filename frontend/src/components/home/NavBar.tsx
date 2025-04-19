@@ -7,7 +7,6 @@ import {
   Plus,
   Save,
   ChevronDown,
-  Search,
   PanelLeft,
   Layers,
   LogOut,
