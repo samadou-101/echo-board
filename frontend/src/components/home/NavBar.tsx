@@ -16,6 +16,7 @@ import ThemeToggle from "@components/ui/ThemeToggle";
 import Input from "@components/ui/Inputs";
 import Login from "./Login";
 import Signup from "./Signup";
+import LoginModal from "./LoginModal";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@config/firebase";
 import { Canvas } from "fabric";
@@ -32,6 +33,7 @@ interface NavBarProps {
 export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const dispatch = useAppDispatch();
 
@@ -62,16 +64,19 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
     setIsLoggedIn(false);
   };
 
-  const handleSaveCanvas = async () => {
+  const handleSaveCanvas = () => {
+    if (!isLoggedIn) {
+      setIsLoginModalOpen(true);
+      setIsSaveModalOpen(false); // Ensure save modal is not open
+      return;
+    }
     if (!canvas) {
       console.error("No canvas available to save");
       return;
     }
-    // Show modal to prompt for project name
     setIsSaveModalOpen(true);
   };
 
-  // Inside NavBar component
   const handleConfirmSave = async () => {
     if (!projectName.trim()) {
       alert("Project name is required");
@@ -93,8 +98,6 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
         localStorage.setItem("projectData", JSON.stringify(projectData));
         dispatch(setIsProjectAdded());
       }
-      // Save to localStorage
-
       console.log(`Canvas saved successfully as "${projectName}"`);
       setIsSaveModalOpen(false);
       setProjectName("");
@@ -103,6 +106,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
       alert("Failed to save canvas");
     }
   };
+
   const handleCancelSave = () => {
     setIsSaveModalOpen(false);
     setProjectName("");
@@ -244,8 +248,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
         </div>
       </header>
 
-      {/* Save Project Modal */}
-      {isSaveModalOpen && (
+      {isSaveModalOpen && isLoggedIn && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white/95 p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900/95">
             <h2 className="mb-4 text-lg font-semibold">Save Project</h2>
@@ -264,6 +267,17 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
             </div>
           </div>
         </div>
+      )}
+      {isLoginModalOpen && (
+        <LoginModal
+          open={isLoginModalOpen}
+          onOpenChange={setIsLoginModalOpen}
+          onLogin={() => {
+            setIsLoginModalOpen(false);
+            handleLogin();
+            setIsSaveModalOpen(true);
+          }}
+        />
       )}
     </>
   );
