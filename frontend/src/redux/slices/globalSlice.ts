@@ -5,6 +5,7 @@ interface GlobalState {
   isChatOpen: boolean;
   isProjectAdded: boolean;
   isLoggedIn: boolean;
+  isDarkTheme: boolean;
 }
 
 const initialState: GlobalState = {
@@ -12,6 +13,7 @@ const initialState: GlobalState = {
   isChatOpen: false,
   isProjectAdded: false,
   isLoggedIn: false,
+  isDarkTheme: localStorage.getItem("isDarkTheme") === "true",
 };
 
 export const globalSlice = createSlice({
@@ -36,6 +38,10 @@ export const globalSlice = createSlice({
     resetProjects: (state) => {
       state.isProjectAdded = false;
     },
+    setIsDarkTheme: (state, action: PayloadAction<boolean>) => {
+      state.isDarkTheme = action.payload;
+      localStorage.setItem("isDarkTheme", String(action.payload));
+    },
   },
 });
 
@@ -46,5 +52,7 @@ export const {
   setIsProjectAdded,
   setIsLoggedIn,
   resetProjects,
+  setIsDarkTheme,
 } = globalSlice.actions;
+
 export default globalSlice.reducer;

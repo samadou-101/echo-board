@@ -37,7 +37,7 @@ export const handleClearCanvas = (
 ) => {
   if (canvas) {
     canvas.clear();
-    canvas.backgroundColor = "#f3f4f6";
+    // canvas.backgroundColor = "#f3f4f6";
     canvas.renderAll();
     if (roomId) {
       socket.emit("canvas:clear", { roomId });

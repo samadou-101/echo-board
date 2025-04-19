@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Canvas } from "fabric";
 import { useEffect } from "react";
+import { Canvas } from "fabric";
+
 interface InitCanvasArgs {
   setIsCanvasReady: React.Dispatch<React.SetStateAction<boolean>>;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   setCanvas: React.Dispatch<React.SetStateAction<Canvas | null>>;
 }
+
 export const useInitCanvas = ({
   setIsCanvasReady,
   canvasRef,
@@ -25,11 +26,12 @@ export const useInitCanvas = ({
           preserveObjectStacking: true,
         });
 
-        initCanvas.backgroundColor = "#f3f4f6";
+        // Check if dark mode is active
+        const isDarkMode = document.documentElement.classList.contains("dark");
+        initCanvas.backgroundColor = isDarkMode ? "#1f2937" : "#f3f4f6"; // Dark mode: gray-800, Light mode: gray-100
         initCanvas.renderAll();
         setCanvas(initCanvas);
 
-        // Force another render after a slight delay to ensure DOM is ready
         setTimeout(() => {
           initCanvas.renderAll();
           setIsCanvasReady(true);
@@ -37,8 +39,7 @@ export const useInitCanvas = ({
 
         const handleResize = () => {
           const { width, height } = container.getBoundingClientRect();
-          initCanvas.width = width;
-          initCanvas.height = height;
+          initCanvas.setDimensions({ width, height });
           initCanvas.renderAll();
         };
 

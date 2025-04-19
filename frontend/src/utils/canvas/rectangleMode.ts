@@ -1,7 +1,10 @@
+import { store } from "@redux/store";
 import { Canvas, Rect } from "fabric";
 
 export const rectangleModeStart = (canvas: Canvas) => {
   // Set canvas to selection mode
+  const state = store.getState();
+  const isDarkTheme = state.global.isDarkTheme;
   canvas.isDrawingMode = false;
   canvas.selection = true;
   canvas.defaultCursor = "default";
@@ -17,8 +20,8 @@ export const rectangleModeStart = (canvas: Canvas) => {
       top: 100 + offset,
       width: 100,
       height: 60,
-      fill: "#f3f4f6",
-      stroke: "black",
+      fill: "transparent",
+      stroke: isDarkTheme ? "white" : "black",
       strokeWidth: 2,
       selectable: true,
     });

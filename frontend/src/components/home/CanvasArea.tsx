@@ -93,7 +93,7 @@ export default function CanvasArea({
   useCanvasPan(canvas, mode);
 
   return (
-    <main className="relative flex h-[calc(100vh-4rem)] flex-1 flex-col pt-24 transition-colors duration-200 dark:bg-gray-900">
+    <main className="relative flex h-[calc(100vh-4rem)] flex-1 flex-col pt-24 transition-colors duration-200 dark:bg-slate-900">
       <div className="fixed top-24 left-[55%] z-10 w-[30%] max-w-screen-lg -translate-x-1/2 transform px-4 max-2xl:w-[40%] max-xl:w-[45%] max-lg:left-[65%] max-lg:w-[60%] max-md:left-1/2 max-md:w-[80%]">
         <Tabs.Root
           defaultValue="select"
