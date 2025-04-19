@@ -1,10 +1,13 @@
+import { store } from "@redux/store";
 import { Canvas, Triangle } from "fabric";
 
 export const triangleModeStart = (canvas: Canvas) => {
   canvas.isDrawingMode = false;
   canvas.selection = true;
   canvas.defaultCursor = "default";
+  const state = store.getState();
 
+  const isDarkTheme = state.global.isDarkTheme;
   let triangleCount = 0;
 
   const createTriangle = () => {
@@ -14,8 +17,8 @@ export const triangleModeStart = (canvas: Canvas) => {
       top: 100 + offset,
       width: 100,
       height: 100,
-      fill: "#f3f4f6",
-      stroke: "black",
+      fill: "transparent",
+      stroke: isDarkTheme ? "white" : "black",
       strokeWidth: 2,
       selectable: true,
     });

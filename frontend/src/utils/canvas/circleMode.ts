@@ -1,9 +1,13 @@
+import { store } from "@redux/store";
 import { Canvas, Circle } from "fabric";
 
 export const circleModeStart = (canvas: Canvas) => {
   canvas.isDrawingMode = false;
   canvas.selection = true;
   canvas.defaultCursor = "default";
+
+  const state = store.getState();
+  const isDarkTheme = state.global.isDarkTheme;
 
   let circleCount = 0;
 
@@ -13,8 +17,8 @@ export const circleModeStart = (canvas: Canvas) => {
       left: 100 + offset,
       top: 100 + offset,
       radius: 50,
-      fill: "#f3f4f6",
-      stroke: "black",
+      fill: "transparent",
+      stroke: isDarkTheme ? "white" : "black",
       strokeWidth: 2,
       selectable: true,
     });

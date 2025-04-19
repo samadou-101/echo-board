@@ -157,7 +157,7 @@ const Home: React.FC = () => {
   // }, [canvas]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-50 text-gray-900 transition-colors duration-200 dark:bg-gray-950 dark:text-gray-100">
+    <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-900 transition-colors duration-200 dark:bg-gray-950 dark:text-gray-100">
       <div className="pointer-events-none absolute inset-0 z-[1000]">
         {Object.entries(cursors)
           .filter(([id]) => id !== userId)

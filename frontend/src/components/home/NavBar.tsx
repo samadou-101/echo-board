@@ -250,7 +250,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
           </div>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <ThemeToggle canvas={canvas} />
             <div className="relative hidden sm:block">
               <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input

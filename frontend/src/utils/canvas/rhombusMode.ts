@@ -1,9 +1,13 @@
+import { store } from "@redux/store";
 import { Canvas, Polygon } from "fabric";
 
 export const rhombusModeStart = (canvas: Canvas) => {
   canvas.isDrawingMode = false;
   canvas.selection = true;
   canvas.defaultCursor = "default";
+
+  const state = store.getState();
+  const isDarkTheme = state.global.isDarkTheme;
 
   let rhombusCount = 0;
 
@@ -19,8 +23,8 @@ export const rhombusModeStart = (canvas: Canvas) => {
       {
         left: 100 + offset,
         top: 100 + offset,
-        fill: "#f3f4f6",
-        stroke: "black",
+        fill: "transparent",
+        stroke: isDarkTheme ? "white" : "black",
         strokeWidth: 2,
         selectable: true,
       },
