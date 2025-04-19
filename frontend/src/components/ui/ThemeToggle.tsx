@@ -18,7 +18,7 @@ const ThemeToggle: FC<IThemeToggle> = ({ canvas }) => {
 
     if (canvas) {
       // Update canvas background color
-      canvas.backgroundColor = newTheme ? "#1f2937" : "#f3f4f6"; // gray-800 for dark, gray-100 for light
+      // canvas.backgroundColor = newTheme ? "#1f2937" : "#e5e7eb";
 
       // Update objects
       canvas.getObjects().forEach((obj) => {

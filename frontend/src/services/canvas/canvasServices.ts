@@ -49,7 +49,25 @@ export const saveCanvas = async (
       return { error: "User not authenticated" };
     }
 
-    const json = JSON.stringify(canvas.toJSON(["id", "selectable", "evented"]));
+    const json = JSON.stringify(
+      canvas.toJSON([
+        "id",
+        "selectable",
+        "evented",
+        "background",
+        "backgroundColor",
+        "fill",
+        "stroke", // Exclude stroke color
+        "strokeWidth", // Exclude stroke width
+        "strokeDashArray", // Exclude stroke dash array
+        "strokeLineCap", // Exclude stroke line cap
+        "strokeDashOffset", // Exclude stroke dash offset
+        "strokeLineJoin", // Exclude stroke line join
+        "strokeUniform", // Exclude stroke uniform
+        "strokeMiterLimit", // Exclude stroke miter limit
+        "shadow",
+      ]),
+    );
     const response = await fetch(
       // "http://localhost:3000/api/save-canvas"
       `${URL}/api/save-canvas`,
@@ -92,7 +110,25 @@ export const updateCanvas = async (
       return { error: "User not authenticated" };
     }
 
-    const json = JSON.stringify(canvas.toJSON(["id", "selectable", "evented"]));
+    const json = JSON.stringify(
+      canvas.toJSON([
+        "id",
+        "selectable",
+        "evented",
+        "background",
+        "backgroundColor",
+        "fill",
+        "stroke", // Exclude stroke color
+        "strokeWidth", // Exclude stroke width
+        "strokeDashArray", // Exclude stroke dash array
+        "strokeLineCap", // Exclude stroke line cap
+        "strokeDashOffset", // Exclude stroke dash offset
+        "strokeLineJoin", // Exclude stroke line join
+        "strokeUniform", // Exclude stroke uniform
+        "strokeMiterLimit", // Exclude stroke miter limit
+        "shadow",
+      ]),
+    );
     const response = await fetch(
       // `http://localhost:3000/api/update-canvas/${canvasId}`,
       `${URL}/api/update-canvas/${canvasId}`,
@@ -252,7 +288,6 @@ export const loadCanvasToEditor = async (
         });
 
         canvasInstance.calcViewportBoundaries();
-
         canvasInstance.forEachObject((obj) => {
           obj.setCoords();
         });

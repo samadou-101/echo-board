@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// import { store } from "@redux/store";
 import { Canvas } from "fabric";
 import { useEffect } from "react";
 interface InitCanvasArgs {
@@ -11,6 +11,8 @@ export const useInitCanvas = ({
   canvasRef,
   setCanvas,
 }: InitCanvasArgs) => {
+  // const state = store.getState();
+  // const isDarkTheme = state.global.isDarkTheme;
   useEffect(() => {
     if (canvasRef.current) {
       const container = canvasRef.current.parentElement;
@@ -25,7 +27,6 @@ export const useInitCanvas = ({
           preserveObjectStacking: true,
         });
 
-        initCanvas.backgroundColor = "#f3f4f6";
         initCanvas.renderAll();
         setCanvas(initCanvas);
 
@@ -39,6 +40,7 @@ export const useInitCanvas = ({
           const { width, height } = container.getBoundingClientRect();
           initCanvas.width = width;
           initCanvas.height = height;
+          // initCanvas.backgroundColor = isDarkTheme ? "#1f2937" : "#e5e7eb";
           initCanvas.renderAll();
         };
 

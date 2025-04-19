@@ -12,7 +12,7 @@ import socket from "@services/socket/socket";
 import useCursorSharing from "@hooks/socket/useCursorSharing";
 import useCursorTracking from "@hooks/socket/userCursorTracking";
 import { setRoomId } from "@redux/slices/globalSlice";
-import { useAppDispatch, useAppSelector } from "@hooks/redux/redux-hooks";
+import { useAppDispatch } from "@hooks/redux/redux-hooks";
 import Chat from "@components/home/Chat";
 import OptionsPanel from "@components/home/OptionsPanel";
 import { Canvas } from "fabric";
@@ -41,7 +41,6 @@ const Home: React.FC = () => {
   const [mode, setMode] = useState<CanvasMode>("select");
   const [lineWidth, setLineWidth] = useState<number>(2);
   const [color, setColor] = useState<string>("#000000");
-
   const userId = useSocketConnection();
   const cursors = useCursorTracking();
   useCursorSharing(userId);
@@ -49,16 +48,6 @@ const Home: React.FC = () => {
   const [userPresence, setUserPresence] = useState<{
     [userId: string]: { active: boolean; lastActive: number };
   }>({});
-
-  const isDarkTheme = useAppSelector((state) => state.global.isDarkTheme);
-
-  useEffect(() => {
-    if (isDarkTheme) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkTheme]);
 
   useEffect(() => {
     const presenceInterval = setInterval(() => {

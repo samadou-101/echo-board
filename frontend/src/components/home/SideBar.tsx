@@ -106,7 +106,7 @@ export const SideBar: React.FC<SideBarProps> = ({
     };
 
     fetchProjects();
-
+    canvas?.requestRenderAll();
     return () => {
       isCancelled = true;
     };

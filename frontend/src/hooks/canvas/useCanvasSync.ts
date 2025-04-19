@@ -217,7 +217,7 @@ export function useCanvasSync({
       if (data.roomId === roomId) {
         isReceivingUpdate.current = true;
         canvas.clear();
-        canvas.backgroundColor = "#f3f4f6";
+        // canvas.backgroundColor = "#e5e7eb";
         canvas.renderAll();
 
         setTimeout(() => {
