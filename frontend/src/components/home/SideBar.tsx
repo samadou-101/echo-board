@@ -160,6 +160,15 @@ export const SideBar: React.FC<SideBarProps> = ({
     setIsJoiningRoom(value === "join");
   };
 
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+
+  const handleShareRoom = () => {
+    if (currentRoom) {
+      navigator.clipboard.writeText(currentRoom);
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 2000);
+    }
+  };
   return (
     <aside
       className={`fixed inset-y-0 top-16 left-0 h-[calc(100vh-4rem)] min-w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
@@ -202,10 +211,16 @@ export const SideBar: React.FC<SideBarProps> = ({
               size="sm"
               variant="default"
               className="mt-1 flex w-[55%] items-center justify-around p-1"
+              onClick={handleShareRoom}
             >
               <Share size={20} />
               share room
             </Button>
+            {showPopup && (
+              <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-green-500 px-4 py-2 text-sm text-white shadow-lg">
+                Room copied!
+              </div>
+            )}
           </div>
         ) : (
           <div className="mb-6">
