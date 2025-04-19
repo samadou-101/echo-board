@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Mail, Lock, X } from "lucide-react";
 import { auth } from "@config/firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Inputs";
 
@@ -17,6 +21,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
   onOpenChange,
   onLogin,
 }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleLogin = async () => {
@@ -27,7 +33,36 @@ const LoginModal: React.FC<LoginModalProps> = ({
       onOpenChange(false);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.message);
+      if (err.code === "auth/popup-closed-by-user") {
+        setError("Google login was canceled. Please try again.");
+      } else if (err.code === "auth/account-exists-with-different-credential") {
+        setError(
+          "This account exists with a different sign-in method. Try another login option.",
+        );
+      } else {
+        setError("An error occurred during Google login. Please try again.");
+      }
+    }
+  };
+
+  const handleEmailLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      onLogin();
+      onOpenChange(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email. Please sign up.");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Incorrect password. Please try again.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email format. Please enter a valid email.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many login attempts. Please try again later.");
+      } else {
+        setError("An error occurred during login. Please try again.");
+      }
     }
   };
 
@@ -81,13 +116,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 Login with Google
               </span>
             </Button>
-
             {error && (
               <div className="text-sm text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
-
             <div className="my-4 flex items-center justify-between">
               <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
               <span className="px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -95,7 +128,6 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </span>
               <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
             </div>
-
             <div className="space-y-5">
               <div className="space-y-2">
                 <label
@@ -110,11 +142,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
                     id="email"
                     type="email"
                     placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <label
                   htmlFor="password"
@@ -128,11 +161,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
                     id="password"
                     type="password"
                     placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
                   />
                 </div>
               </div>
-
               <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2">
                   <input
@@ -150,14 +184,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   Forgot password?
                 </a>
               </div>
-
               <Button
                 className="w-full rounded-md bg-blue-600 py-3 text-white transition-colors duration-200 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-                onClick={onLogin}
+                onClick={handleEmailLogin}
               >
                 Login
               </Button>
-
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{" "}
                 <Dialog.Close asChild>
