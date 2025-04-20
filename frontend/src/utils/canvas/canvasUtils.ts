@@ -3,6 +3,7 @@ export type CanvasMode =
   | "select"
   | "draw"
   | "erase"
+  | "line"
   | "circle"
   | "rectangle"
   | "triangle"

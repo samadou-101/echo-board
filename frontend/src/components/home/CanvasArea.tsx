@@ -14,7 +14,7 @@ import { useCanvasPan } from "@hooks/canvas/useCanvasPan";
 import { useCanvasZoom, ExtendedCanvas } from "@hooks/canvas/useCanvasZoom";
 import { useRoomInitialization } from "@hooks/canvas/useRoomInitialization";
 import { CanvasMode } from "@utils/canvas/canvasUtils";
-import { Hand, MousePointer2, ZoomIn, ZoomOut, Search } from "lucide-react";
+import { Hand, MousePointer2, ZoomIn, ZoomOut, ScanSearch } from "lucide-react";
 
 // Extend CanvasEvents to include custom zoom:updated event
 interface CustomCanvasEvents {
@@ -112,6 +112,7 @@ export default function CanvasArea({
       canvas.off("zoom:updated" as any, handleZoomUpdated);
     };
   }, [canvas]);
+
   const handleZoomIn = () => {
     if (canvas) {
       (canvas as ExtendedCanvas).zoomIn?.();
@@ -154,12 +155,6 @@ export default function CanvasArea({
               className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
             >
               Shapes
-            </Tabs.Trigger>
-            <Tabs.Trigger
-              value="connector"
-              className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
-            >
-              Connectors
             </Tabs.Trigger>
             <Tabs.Trigger
               value="text"
@@ -212,7 +207,7 @@ export default function CanvasArea({
               }`}
               onClick={() => handleModeChange("zoom", setMode)}
             >
-              <Search style={{ width: "32px", height: "32px" }} />
+              <ScanSearch style={{ width: "38px", height: "34px" }} />
             </Button>
             <div className="ml-2 flex items-center gap-2">
               <Button
@@ -299,31 +294,17 @@ export default function CanvasArea({
             >
               △
             </Button>
-          </Tabs.Content>
-          <Tabs.Content
-            value="connector"
-            className="mt-2 flex flex-wrap justify-center gap-2 rounded-lg border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95"
-          >
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 shadow-sm sm:h-9 sm:w-9"
+              className={`flex h-8 w-8 items-center justify-center shadow-sm ${
+                mode === "line"
+                  ? "border-blue-500 bg-blue-100 dark:bg-blue-900"
+                  : ""
+              }`}
+              onClick={() => handleModeChange("line", setMode)}
             >
-              →
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shadow-sm sm:h-9 sm:w-9"
-            >
-              ↔
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shadow-sm sm:h-9 sm:w-9"
-            >
-              ⟳
+              ➖
             </Button>
           </Tabs.Content>
           <Tabs.Content
@@ -424,7 +405,9 @@ export default function CanvasArea({
                         ? "zoom-in"
                         : mode === "text"
                           ? "text"
-                          : "pointer",
+                          : mode === "line"
+                            ? "crosshair"
+                            : "pointer",
           }}
         />
       </div>

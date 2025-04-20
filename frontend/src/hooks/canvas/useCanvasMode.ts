@@ -8,6 +8,7 @@ import { circleModeStart } from "@utils/canvas/circleMode";
 import { triangleModeStart } from "@utils/canvas/triangleMode";
 import { rhombusModeStart } from "@utils/canvas/rhombusMode";
 import { setupTextMode } from "@utils/canvas/textMode";
+import { lineModeStart } from "@utils/canvas/lineMode";
 
 interface UseCanvasModeArgs {
   canvas: Canvas | null;
@@ -61,6 +62,9 @@ export const useCanvasMode = ({
         break;
       case "rectangle":
         setupShapeMode(canvas, rectangleModeStart);
+        break;
+      case "line":
+        lineModeStart(canvas, lineWidth);
         break;
       case "circle":
         setupShapeMode(canvas, circleModeStart);
