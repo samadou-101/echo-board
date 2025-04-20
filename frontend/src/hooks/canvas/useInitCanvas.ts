@@ -11,13 +11,15 @@ export const useInitCanvas = ({
   canvasRef,
   setCanvas,
 }: InitCanvasArgs) => {
-  // const state = store.getState();
-  // const isDarkTheme = state.global.isDarkTheme;
   useEffect(() => {
     if (canvasRef.current) {
       const container = canvasRef.current.parentElement;
       if (container) {
-        const { width, height } = container.getBoundingClientRect();
+        const isMediumOrSmaller = window.innerWidth <= 768; // md breakpoint
+        const width = container.getBoundingClientRect().width;
+        const height = isMediumOrSmaller
+          ? window.innerHeight
+          : container.getBoundingClientRect().height;
 
         const initCanvas = new Canvas(canvasRef.current, {
           width,
@@ -30,17 +32,17 @@ export const useInitCanvas = ({
         initCanvas.renderAll();
         setCanvas(initCanvas);
 
-        // Force another render after a slight delay to ensure DOM is ready
         setTimeout(() => {
           initCanvas.renderAll();
           setIsCanvasReady(true);
         }, 100);
 
         const handleResize = () => {
-          const { width, height } = container.getBoundingClientRect();
-          initCanvas.width = width;
-          initCanvas.height = height;
-          // initCanvas.backgroundColor = isDarkTheme ? "#1f2937" : "#e5e7eb";
+          const newWidth = container.getBoundingClientRect().width;
+          const newHeight = isMediumOrSmaller
+            ? window.innerHeight
+            : container.getBoundingClientRect().height;
+          initCanvas.setDimensions({ width: newWidth, height: newHeight });
           initCanvas.renderAll();
         };
 

@@ -382,7 +382,7 @@ export default function CanvasArea({
           </Tabs.Content>
         </Tabs.Root>
       </div>
-      <div className="relative flex h-full w-full flex-col md:flex-row">
+      <div className="relative flex h-full w-full md:flex-row">
         <div className="absolute inset-0 flex items-center justify-center">
           {!isCanvasReady && <p className="text-gray-500">Loading canvas...</p>}
         </div>
