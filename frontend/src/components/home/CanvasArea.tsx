@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from "react";
 import Button from "@components/ui/Button";
 import * as Tabs from "@radix-ui/react-tabs";
@@ -11,9 +11,15 @@ import { useCanvasMode } from "@hooks/canvas/useCanvasMode";
 import { useCanvasSync } from "@hooks/canvas/useCanvasSync";
 import { useCanvasResize } from "@hooks/canvas/useCanvasResize";
 import { useCanvasPan } from "@hooks/canvas/useCanvasPan";
+import { useCanvasZoom, ExtendedCanvas } from "@hooks/canvas/useCanvasZoom";
 import { useRoomInitialization } from "@hooks/canvas/useRoomInitialization";
 import { CanvasMode } from "@utils/canvas/canvasUtils";
-import { Hand, MousePointer2 } from "lucide-react";
+import { Hand, MousePointer2, ZoomIn, ZoomOut, Search } from "lucide-react";
+
+// Extend CanvasEvents to include custom zoom:updated event
+interface CustomCanvasEvents {
+  "zoom:updated": { zoom: number };
+}
 
 interface CanvasAreaProps {
   setCanvas: React.Dispatch<React.SetStateAction<Canvas | null>>;
@@ -70,14 +76,13 @@ export default function CanvasArea({
   const lastObjectRef = useRef<unknown>(null);
   const throttleTimeoutRef = useRef<number | null>(null);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
 
-  // Initialize canvas and update parent state
   useInitCanvas({ setIsCanvasReady, canvasRef, setCanvas: setLocalCanvas });
   useEffect(() => {
     setCanvas(canvas);
   }, [canvas, setCanvas]);
 
-  // Use extracted hooks
   useCanvasResize(canvas, canvasRef, isCanvasReady);
   useRoomInitialization(canvas, canvasRef, roomId, isCanvasReady);
   useCanvasMode({ canvas, mode, color, lineWidth });
@@ -91,6 +96,40 @@ export default function CanvasArea({
     throttleTimeoutRef,
   });
   useCanvasPan(canvas, mode);
+  useCanvasZoom(canvas, mode);
+
+  // Listen for zoom:updated events
+  useEffect(() => {
+    if (!canvas) return;
+
+    const handleZoomUpdated = (e: CustomCanvasEvents["zoom:updated"]) => {
+      setZoomLevel(e.zoom);
+    };
+
+    canvas.on("zoom:updated" as any, handleZoomUpdated);
+
+    return () => {
+      canvas.off("zoom:updated" as any, handleZoomUpdated);
+    };
+  }, [canvas]);
+
+  const handleZoomIn = () => {
+    if (canvas) {
+      (canvas as ExtendedCanvas).zoomIn?.();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (canvas) {
+      (canvas as ExtendedCanvas).zoomOut?.();
+    }
+  };
+
+  const handleResetZoom = () => {
+    if (canvas) {
+      (canvas as ExtendedCanvas).resetZoom?.();
+    }
+  };
 
   return (
     <main className="relative flex h-[calc(100vh-4rem)] flex-1 flex-col transition-colors duration-200 dark:bg-[#1f2937]">
@@ -164,6 +203,50 @@ export default function CanvasArea({
             >
               <Hand style={{ width: "32px", height: "32px" }} />
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className={`flex h-9 w-9 items-center justify-center shadow-sm ${
+                mode === "zoom"
+                  ? "border-blue-500 bg-blue-100 dark:bg-blue-900"
+                  : ""
+              }`}
+              onClick={() => handleModeChange("zoom", setMode)}
+            >
+              <Search style={{ width: "32px", height: "32px" }} />
+            </Button>
+            <div className="ml-2 flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="flex h-9 w-9 items-center justify-center shadow-sm"
+                onClick={handleZoomIn}
+                title="Zoom In"
+              >
+                <ZoomIn style={{ width: "20px", height: "20px" }} />
+              </Button>
+              <div className="flex h-9 min-w-[60px] items-center justify-center rounded border bg-white px-2 text-xs font-medium shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                {Math.round(zoomLevel * 100)}%
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="flex h-9 w-9 items-center justify-center shadow-sm"
+                onClick={handleZoomOut}
+                title="Zoom Out"
+              >
+                <ZoomOut style={{ width: "20px", height: "20px" }} />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-1 h-9 shadow-sm"
+                onClick={handleResetZoom}
+                title="Reset Zoom"
+              >
+                Reset
+              </Button>
+            </div>
           </Tabs.Content>
           <Tabs.Content
             value="shape"
@@ -319,7 +402,6 @@ export default function CanvasArea({
           </Tabs.Content>
         </Tabs.Root>
       </div>
-
       <div className="relative flex h-full w-full flex-col md:flex-row">
         <div className="absolute inset-0 flex items-center justify-center">
           {!isCanvasReady && <p className="text-gray-500">Loading canvas...</p>}
@@ -339,9 +421,11 @@ export default function CanvasArea({
                       ? canvas?.defaultCursor === "grabbing"
                         ? "grabbing"
                         : "grab"
-                      : mode === "text"
-                        ? "text"
-                        : "pointer",
+                      : mode === "zoom"
+                        ? "zoom-in"
+                        : mode === "text"
+                          ? "text"
+                          : "pointer",
           }}
         />
       </div>

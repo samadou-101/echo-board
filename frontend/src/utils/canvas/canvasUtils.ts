@@ -8,6 +8,7 @@ export type CanvasMode =
   | "triangle"
   | "rhombus"
   | "text"
+  | "zoom"
   | "pan";
 
 export const handleModeChange = (
