@@ -112,7 +112,6 @@ export default function CanvasArea({
       canvas.off("zoom:updated" as any, handleZoomUpdated);
     };
   }, [canvas]);
-
   const handleZoomIn = () => {
     if (canvas) {
       (canvas as ExtendedCanvas).zoomIn?.();
@@ -219,8 +218,8 @@ export default function CanvasArea({
               <Button
                 variant="outline"
                 size="icon"
-                className="flex h-9 w-9 items-center justify-center shadow-sm"
                 onClick={handleZoomIn}
+                className="flex h-9 w-9 items-center justify-center shadow-sm"
                 title="Zoom In"
               >
                 <ZoomIn style={{ width: "20px", height: "20px" }} />
@@ -231,8 +230,8 @@ export default function CanvasArea({
               <Button
                 variant="outline"
                 size="icon"
-                className="flex h-9 w-9 items-center justify-center shadow-sm"
                 onClick={handleZoomOut}
+                className="flex h-9 w-9 items-center justify-center shadow-sm"
                 title="Zoom Out"
               >
                 <ZoomOut style={{ width: "20px", height: "20px" }} />
@@ -240,8 +239,8 @@ export default function CanvasArea({
               <Button
                 variant="outline"
                 size="sm"
-                className="ml-1 h-9 shadow-sm"
                 onClick={handleResetZoom}
+                className="ml-1 h-9 shadow-sm"
                 title="Reset Zoom"
               >
                 Reset
