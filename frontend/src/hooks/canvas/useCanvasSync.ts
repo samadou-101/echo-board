@@ -174,6 +174,7 @@ export function useCanvasSync({
 
             // Add a second renderAll() after the flag is reset
             // This ensures any queued updates are properly displayed
+
             canvas.renderAll();
           }, 50);
         });
