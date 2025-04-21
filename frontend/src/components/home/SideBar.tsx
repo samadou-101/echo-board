@@ -193,7 +193,7 @@ export const SideBar: React.FC<SideBarProps> = ({
 
   return (
     <aside
-      className={`fixed inset-y-0 top-16 left-0 z-90 h-[calc(100vh-4rem)] min-w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
+      className={`fixed inset-y-0 top-16 left-0 z-90 h-[calc(100vh-4rem)] w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 sm:px-6 sm:pt-0 md:static md:min-w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -206,7 +206,7 @@ export const SideBar: React.FC<SideBarProps> = ({
           <Tabs.List className="flex flex-wrap justify-center border-b border-gray-200 dark:border-gray-800">
             <Tabs.Trigger
               value="create"
-              className="border-b-2 border-transparent px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
+              className="border-b-2 border-transparent px-3 py-2 text-base font-medium text-gray-700 transition-colors duration-200 hover:text-blue-600 data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 sm:px-5 sm:py-3 sm:text-sm dark:text-gray-300 dark:hover:text-blue-300 dark:data-[state=active]:text-blue-400"
             >
               create
             </Tabs.Trigger>
