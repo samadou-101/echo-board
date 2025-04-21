@@ -193,7 +193,7 @@ export const SideBar: React.FC<SideBarProps> = ({
 
   return (
     <aside
-      className={`fixed inset-y-0 top-16 left-0 h-[calc(100vh-4rem)] w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 max-md:z-90 sm:px-6 sm:pt-0 md:static md:min-w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 ${
+      className={`fixed inset-y-0 top-16 left-0 h-[calc(100vh-4rem)] w-64 transform border-r border-gray-200 bg-white/70 p-4 shadow-lg backdrop-blur-md transition-all duration-300 max-md:z-20 sm:px-6 sm:pt-0 md:static md:min-w-72 md:translate-x-0 dark:border-gray-800 dark:bg-gray-900/70 max-md:dark:bg-gray-950/60 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >

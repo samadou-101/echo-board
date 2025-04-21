@@ -174,7 +174,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
               Echo Board
             </span>
           </div>
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="items-center gap-2 md:flex">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button variant="ghost" size="sm">
