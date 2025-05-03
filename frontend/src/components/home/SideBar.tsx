@@ -51,6 +51,7 @@ export const SideBar: React.FC<SideBarProps> = ({
   const isProjectAdded = useAppSelector((state) => state.global.isProjectAdded);
   const isLoggedIn = useAppSelector((state) => state.global.isLoggedIn);
   const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [showError, setShowError] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -181,6 +182,7 @@ export const SideBar: React.FC<SideBarProps> = ({
 
   const handleTabChange = (value: string) => {
     setIsJoiningRoom(value === "join");
+    setShowError(false);
   };
 
   const handleShareRoom = () => {
@@ -188,6 +190,19 @@ export const SideBar: React.FC<SideBarProps> = ({
       navigator.clipboard.writeText(currentRoom);
       setShowPopup(true);
       setTimeout(() => setShowPopup(false), 2000);
+    }
+  };
+
+  const handleCreateOrJoinRoom = () => {
+    if (!roomName.trim()) {
+      setShowError(true);
+      return;
+    }
+    setShowError(false);
+    if (isJoiningRoom) {
+      joinRoom();
+    } else {
+      createRoom();
     }
   };
 
@@ -245,15 +260,23 @@ export const SideBar: React.FC<SideBarProps> = ({
             )}
           </div>
         ) : (
-          <div className="mb-6">
+          <div className="mb-6 h-auto">
             <Input
               placeholder="Room name"
               value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
+              onChange={(e) => {
+                setRoomName(e.target.value);
+                setShowError(false);
+              }}
               className="mb-2 w-full"
             />
+            {showError && (
+              <span className="mb-2 block text-sm text-red-500">
+                Please enter room name
+              </span>
+            )}
             <Button
-              onClick={isJoiningRoom ? joinRoom : createRoom}
+              onClick={handleCreateOrJoinRoom}
               className="flex w-full items-center"
             >
               <Plus className="mr-2 h-4 w-4" />
