@@ -158,7 +158,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
 
   return (
     <>
-      <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center border-b border-gray-200 bg-white/80 px-4 shadow-sm backdrop-blur-md sm:px-6 dark:border-gray-800 dark:bg-gray-900/80">
+      <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center border-b border-gray-200 bg-white/80 px-4 shadow-sm backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/80">
         <div className="flex w-full items-center gap-2 sm:gap-4">
           <Button
             variant="ghost"
@@ -169,8 +169,8 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
             <PanelLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center">
-            <Layers className="mr-2 h-6 w-6 text-blue-600 sm:h-7 sm:w-7 dark:text-blue-400" />
-            <span className="text-lg font-semibold tracking-tight sm:text-xl">
+            <Layers className="mr-2 h-5 w-5 text-blue-600 sm:h-7 sm:w-7 dark:text-blue-400" />
+            <span className="text-sm font-semibold tracking-tight sm:text-lg">
               Echo Board
             </span>
           </div>
@@ -178,7 +178,8 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button variant="ghost" size="sm">
-                  File <ChevronDown className="ml-1 h-4 w-4" />
+                  <span className="text-xs sm:text-sm">File</span>{" "}
+                  <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-[200px] rounded-lg border border-gray-200 bg-white/95 p-1.5 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95">
