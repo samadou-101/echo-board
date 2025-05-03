@@ -163,7 +163,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setSidebarOpen((prev) => !prev)}
           >
             <PanelLeft className="h-5 w-5" />
@@ -194,16 +194,16 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
                 >
                   <Save className="mr-2 h-4 w-4" /> Save
                 </DropdownMenu.Item>
-                <DropdownMenu.Separator className="my-1 h-px bg-gray-200 dark:bg-gray-800" />
+                {/* <DropdownMenu.Separator className="my-1 h-px bg-gray-200 dark:bg-gray-800" />
                 <DropdownMenu.Item className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
                   Import
                 </DropdownMenu.Item>
                 <DropdownMenu.Item className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">
                   Export
-                </DropdownMenu.Item>
+                </DropdownMenu.Item> */}
               </DropdownMenu.Content>
             </DropdownMenu.Root>
-            <DropdownMenu.Root>
+            {/* <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button variant="ghost" size="sm">
                   Edit <ChevronDown className="ml-1 h-4 w-4" />
@@ -227,8 +227,9 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
                   Paste
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
-            </DropdownMenu.Root>
-            <DropdownMenu.Root>
+            </DropdownMenu.Root> */}
+
+            {/* <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button variant="ghost" size="sm">
                   View <ChevronDown className="ml-1 h-4 w-4" />
@@ -245,7 +246,7 @@ export const NavBar: React.FC<NavBarProps> = ({ setSidebarOpen, canvas }) => {
                   Fit to Screen
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
-            </DropdownMenu.Root>
+            </DropdownMenu.Root> */}
           </div>
           <div className="flex-1" />
           <div className="flex items-center gap-2">

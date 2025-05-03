@@ -220,7 +220,7 @@ const Home: React.FC = () => {
 
       <NavBar canvas={canvas} setSidebarOpen={setSidebarOpen} />
       <OptionsPanel />
-      <div className="flex min-h-screen flex-1 flex-col pt-16 md:flex-row">
+      <div className="flex min-h-screen grow flex-col pt-16 md:flex-row">
         <SideBar
           setCanvas={setCanvas}
           canvas={canvas}
